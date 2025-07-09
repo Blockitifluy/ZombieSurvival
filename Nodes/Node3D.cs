@@ -5,13 +5,25 @@ namespace ZombieSurvival.Nodes;
 
 public class Node3D : Node
 {
+    private EVector3 _Rotation = EVector3.Up * 90;
     public EVector3 Position = EVector3.Zero;
-    public EVector3 Rotation = EVector3.Zero;
+    public EVector3 Rotation
+    {
+        get
+        {
+            return _Rotation;
+        }
+        set
+        {
+            _Rotation = value;
+            UpdateVectors();
+        }
+    }
     public EVector3 Scale = EVector3.One;
 
     private EVector3 _Front = -EVector3.Forward;
     private EVector3 _Up = EVector3.Up;
-    private EVector3 _Right = EVector3.Right;
+    private EVector3 _Right = -EVector3.Right;
 
     public EVector3 Front => _Front;
     public EVector3 Up => _Up;
@@ -19,24 +31,24 @@ public class Node3D : Node
 
     public float Pitch
     {
-        get => MathHelper.DegreesToRadians(Rotation.Y);
+        get => Rotation.Y;
         set
         {
             // We clamp the pitch value between -89 and 89 to prevent the camera from going upside down, and a bunch
             // of weird "bugs" when you are using euler angles for rotation.
             // If you want to read more about this you can try researching a topic called gimbal lock
             var angle = MathHelper.Clamp(value, -89f, 89f);
-            Rotation.Y = MathHelper.RadiansToDegrees(angle);
+            _Rotation.Y = angle;
             UpdateVectors();
         }
     }
 
     public float Yaw
     {
-        get => MathHelper.DegreesToRadians(Rotation.X);
+        get => Rotation.X;
         set
         {
-            Rotation.X = MathHelper.RadiansToDegrees(value);
+            _Rotation.X = value;
             UpdateVectors();
         }
     }

@@ -24,33 +24,34 @@ public class Player : Character
 
         // TODO - Simplify input using axis
         var input = Input.KeyboardState;
-        float fDelta = (float)delta;
+        float fDelta = (float)delta,
+        time = fDelta * 4;
 
         if (input.IsKeyDown(Keys.W))
         {
-            Camera.Position += Camera.Front * CameraSpeed * fDelta; // Forward
+            Camera.Position += Camera.Front * CameraSpeed * time; // Forward
         }
         if (input.IsKeyDown(Keys.S))
         {
-            Camera.Position -= Camera.Front * CameraSpeed * fDelta; // Backwards
+            Camera.Position -= Camera.Front * CameraSpeed * time; // Backwards
         }
 
         if (input.IsKeyDown(Keys.A))
         {
-            Camera.Position -= Camera.Right * CameraSpeed * fDelta; // Left
+            Camera.Position -= Camera.Right * CameraSpeed * time; // Left
         }
         if (input.IsKeyDown(Keys.D))
         {
-            Camera.Position += Camera.Right * CameraSpeed * fDelta; // Right
+            Camera.Position += Camera.Right * CameraSpeed * time; // Right
         }
 
         if (input.IsKeyDown(Keys.Space))
         {
-            Camera.Position += Camera.Up * CameraSpeed * fDelta; // Up
+            Camera.Position += Camera.Up * CameraSpeed * time; // Up
         }
         if (input.IsKeyDown(Keys.LeftShift))
         {
-            Camera.Position -= Camera.Up * CameraSpeed * fDelta; // Down
+            Camera.Position -= Camera.Up * CameraSpeed * time; // Down
         }
 
         // Get the mouse state
@@ -64,6 +65,9 @@ public class Player : Character
         else
         {
             // Calculate the offset of the mouse position
+            Console.WriteLine(Camera.Yaw);
+            Console.WriteLine(Camera.Pitch);
+
             var deltaX = mouse.X - LastPos.X;
             var deltaY = mouse.Y - LastPos.Y;
             LastPos = new Vector2(mouse.X, mouse.Y);
@@ -71,6 +75,9 @@ public class Player : Character
             // Apply the camera pitch and yaw (we clamp the pitch in the camera class)
             Camera.Yaw += deltaX * Sensitivity;
             Camera.Pitch -= deltaY * Sensitivity; // Reversed since y-coordinates range from bottom to top
+
+            Console.WriteLine(Camera.Yaw);
+            Console.WriteLine(Camera.Pitch);
         }
     }
 
