@@ -1,46 +1,65 @@
 using OpenTK.Mathematics;
 using ZombieSurvival.Engine.NodeSystem;
 
-namespace ZombieSurvival.Nodes;
+namespace ZombieSurvival.Engine;
 
 public class Node3D : Node
 {
-    public EVector3 Position = EVector3.Zero;
-    public EVector3 Rotation = EVector3.Zero;
-    public EVector3 Scale = EVector3.One;
+    private EVector3 _Rotation;
 
-    private EVector3 _Front = -EVector3.Forward;
+    public EVector3 Position { get; set; } = EVector3.Zero;
+    public virtual EVector3 Rotation
+    {
+        get => _Rotation;
+        set
+        {
+            _Rotation = value;
+            UpdateVectors();
+        }
+    }
+    public EVector3 Scale { get; set; } = EVector3.One;
+
+    private EVector3 _Front = EVector3.Forward;
     private EVector3 _Up = EVector3.Up;
-    private EVector3 _Right = EVector3.Right;
+    private EVector3 _Right = -EVector3.Right;
 
     public EVector3 Front => _Front;
     public EVector3 Up => _Up;
     public EVector3 Right => _Right;
 
-    public float Pitch
+    /// <summary>
+    /// Y Rotation
+    /// </summary>
+    public virtual float Pitch
     {
-        get => MathHelper.DegreesToRadians(Rotation.Y);
+        get => Rotation.Y;
         set
         {
             // We clamp the pitch value between -89 and 89 to prevent the camera from going upside down, and a bunch
             // of weird "bugs" when you are using euler angles for rotation.
             // If you want to read more about this you can try researching a topic called gimbal lock
             var angle = MathHelper.Clamp(value, -89f, 89f);
-            Rotation.Y = MathHelper.RadiansToDegrees(angle);
+            _Rotation.Y = angle;
             UpdateVectors();
         }
     }
 
+    /// <summary>
+    /// X rotation
+    /// </summary>
     public float Yaw
     {
-        get => MathHelper.DegreesToRadians(Rotation.X);
+        get => Rotation.X;
         set
         {
-            Rotation.X = MathHelper.RadiansToDegrees(value);
+            _Rotation.X = value;
             UpdateVectors();
         }
     }
 
+    /// <summary>
+    /// Updates the Front, Up and Right vectors.
+    /// </summary>
     private void UpdateVectors()
     {
         // First, the front matrix is calculated using some basic trigonometry.

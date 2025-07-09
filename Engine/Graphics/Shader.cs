@@ -46,40 +46,6 @@ public class Shader : IDisposable
 		}
 	}
 
-	private void CompileVert(string path)
-	{
-		string VertexShaderSource = File.ReadAllText(path);
-
-		VertexShader = GL.CreateShader(ShaderType.VertexShader);
-		GL.ShaderSource(VertexShader, VertexShaderSource);
-
-		GL.CompileShader(VertexShader);
-
-		GL.GetShader(VertexShader, ShaderParameter.CompileStatus, out int success);
-		if (success == 0)
-		{
-			string infoLog = GL.GetShaderInfoLog(VertexShader);
-			Console.WriteLine(infoLog);
-		}
-	}
-
-	private void CompileFrag(string path)
-	{
-		string FragmentShaderSource = File.ReadAllText(path);
-
-		FragmentShader = GL.CreateShader(ShaderType.FragmentShader);
-		GL.ShaderSource(FragmentShader, FragmentShaderSource);
-
-		GL.CompileShader(FragmentShader);
-
-		GL.GetShader(FragmentShader, ShaderParameter.CompileStatus, out int success1);
-		if (success1 == 0)
-		{
-			string infoLog = GL.GetShaderInfoLog(FragmentShader);
-			Console.WriteLine(infoLog);
-		}
-	}
-
 	public int GetAttribLocation(string attribName)
 	{
 		return GL.GetAttribLocation(Handle, attribName);
@@ -161,11 +127,8 @@ public class Shader : IDisposable
 	public Shader(string vertPath, string fragPath)
 	{
 		var shaderSource = File.ReadAllText(vertPath);
-
 		var vertexShader = GL.CreateShader(ShaderType.VertexShader);
-
 		GL.ShaderSource(vertexShader, shaderSource);
-
 		CompileShader(vertexShader);
 
 		shaderSource = File.ReadAllText(fragPath);
@@ -174,7 +137,6 @@ public class Shader : IDisposable
 		CompileShader(fragmentShader);
 
 		Handle = GL.CreateProgram();
-
 		GL.AttachShader(Handle, vertexShader);
 		GL.AttachShader(Handle, fragmentShader);
 
@@ -187,7 +149,7 @@ public class Shader : IDisposable
 
 		GL.GetProgram(Handle, GetProgramParameterName.ActiveUniforms, out var numberOfUniforms);
 
-		_uniformLocations = new Dictionary<string, int>();
+		_uniformLocations = [];
 
 		for (var i = 0; i < numberOfUniforms; i++)
 		{

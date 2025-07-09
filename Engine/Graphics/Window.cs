@@ -40,12 +40,14 @@ public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings 
 	[AllowNull]
 	private Texture MTexture1;
 
-	public static Camera? CurrentCamera => Camera.CurrentCamera;
+	private static Camera? CurrentCamera => Camera.CurrentCamera;
 	private double Time;
 
 	protected override void OnLoad()
 	{
 		base.OnLoad();
+
+		ArgumentNullException.ThrowIfNull(CurrentCamera, nameof(CurrentCamera));
 
 		GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
@@ -82,6 +84,9 @@ public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings 
 		Shader.SetInt("texture0", 0);
 		Shader.SetInt("texture1", 1);
 
+		CurrentCamera.Position = Vector3.Forward * 3;
+		CurrentCamera.AspectRatio = Size.X / (float)Size.Y;
+
 		CursorState = CursorState.Grabbed;
 	}
 
@@ -101,22 +106,14 @@ public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings 
 		MTexture1.Use(TextureUnit.Texture1);
 		Shader.Use();
 
-		Camera camera = CurrentCamera;
-
 		var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(Time));
 		Shader.SetMatrix4("model", model);
-		Shader.SetMatrix4("view", camera.GetViewMatrix());
-		Shader.SetMatrix4("projection", camera.GetProjectionMatrix());
+		Shader.SetMatrix4("view", CurrentCamera.GetViewMatrix());
+		Shader.SetMatrix4("projection", CurrentCamera.GetProjectionMatrix());
 
 		GL.DrawElements(PrimitiveType.Triangles, Indices.Length, DrawElementsType.UnsignedInt, 0);
 
 		SwapBuffers();
-
-		List<Node> nodes = Tree.GetTree().GetAllNodes();
-		foreach (Node node in nodes)
-		{
-			node.Update(e.Time);
-		}
 	}
 
 	protected override void OnUpdateFrame(FrameEventArgs e)
@@ -152,6 +149,12 @@ public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings 
 
 		Input.KeyboardState = KeyboardState;
 		Input.MouseState = MouseState;
+
+		List<Node> nodes = Tree.GetTree().GetAllNodes();
+		foreach (Node node in nodes)
+		{
+			node.Update(e.Time);
+		}
 	}
 
 	protected override void OnKeyDown(KeyboardKeyEventArgs e)
