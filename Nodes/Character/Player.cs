@@ -62,9 +62,6 @@ public class Player : Character
         else
         {
             // Calculate the offset of the mouse position
-            Console.WriteLine(Camera.Yaw);
-            Console.WriteLine(Camera.Pitch);
-
             var deltaX = mouse.X - LastPos.X;
             var deltaY = mouse.Y - LastPos.Y;
             LastPos = new Vector2(mouse.X, mouse.Y);
@@ -72,9 +69,6 @@ public class Player : Character
             // Apply the camera pitch and yaw (we clamp the pitch in the camera class)
             Camera.Yaw += deltaX * Sensitivity;
             Camera.Pitch -= deltaY * Sensitivity; // Reversed since y-coordinates range from bottom to top
-
-            Console.WriteLine(Camera.Yaw);
-            Console.WriteLine(Camera.Pitch);
         }
     }
 
