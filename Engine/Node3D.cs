@@ -6,7 +6,6 @@ namespace ZombieSurvival.Engine;
 public class Node3D : Node
 {
     private EVector3 _Rotation;
-
     public EVector3 Position { get; set; } = EVector3.Zero;
     public virtual EVector3 Rotation
     {
@@ -18,6 +17,89 @@ public class Node3D : Node
         }
     }
     public EVector3 Scale { get; set; } = EVector3.One;
+
+    public EVector3 GlobalPosition
+    {
+        get
+        {
+            EVector3 global = Position;
+            Node3D current = this;
+
+            while (current.Parent is not null)
+            {
+                if (current.Parent is not Node3D node3D)
+                {
+                    continue;
+                }
+
+                global += node3D.Position;
+                current = node3D;
+            }
+
+            return global;
+        }
+    }
+    public EVector3 GlobalRotation
+    {
+        get
+        {
+            EVector3 global = Rotation;
+            Node3D current = this;
+
+            while (current.Parent is not null)
+            {
+                if (current.Parent is not Node3D node3D)
+                {
+                    continue;
+                }
+
+                global += node3D.Rotation;
+                current = node3D;
+            }
+
+            return global;
+        }
+    }
+    public EVector3 GlobalScale
+    {
+        get
+        {
+            EVector3 global = Scale;
+            Node3D current = this;
+
+            while (current.Parent is not null)
+            {
+                if (current.Parent is not Node3D node3D)
+                {
+                    continue;
+                }
+
+                global += node3D.Scale;
+                current = node3D;
+            }
+
+            return global;
+        }
+    }
+
+    public Quaternion Quaternion => Quaternion.FromEulerAngles(
+        _Rotation.X,
+        _Rotation.Y,
+        _Rotation.Z
+    );
+
+    public Quaternion GlobalQuaternion
+    {
+        get
+        {
+            var global = GlobalRotation;
+            return Quaternion.FromEulerAngles(
+                global.X,
+                global.Y,
+                global.Z
+            );
+        }
+    }
 
     private EVector3 _Front = EVector3.Forward;
     private EVector3 _Up = EVector3.Up;

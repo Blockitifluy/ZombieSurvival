@@ -1,6 +1,6 @@
 namespace ZombieSurvival.Engine.NodeSystem;
 
-public class Node : IDisposable
+public class Node
 {
     private Node? _Parent;
     public Node? Parent
@@ -75,8 +75,9 @@ public class Node : IDisposable
         Console.WriteLine($"Started {this}");
     }
 
-    public void Dispose()
+    public void Destroy()
     {
+        // TODO - Also destroy descenants
         GetTree().UnregisterNode(this);
     }
 

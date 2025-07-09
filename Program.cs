@@ -2,8 +2,10 @@
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
+using ZombieSurvival.Engine;
 using ZombieSurvival.Engine.Graphics;
 using ZombieSurvival.Engine.NodeSystem;
+using ZombieSurvival.Nodes;
 using ZombieSurvival.Nodes.Character;
 
 namespace ZombieSurvival;
@@ -37,6 +39,21 @@ public static class Program
 		// TODO - Load From File
 
 		_ = Node.New<Player>(null);
+
+		MeshContainer container0 = Node.New<MeshContainer>(null);
+		container0.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Quad);
+		container0.Rotation = EVector3.Right * 135;
+
+		MeshContainer container1 = Node.New<MeshContainer>(null);
+		container1.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Triangle);
+		container1.Position = EVector3.Right * 5.0f;
+		container0.Rotation = EVector3.Up * 5;
+		container1.Scale = EVector3.One * 5.0f;
+
+		// MeshContainer container2 = Node.New<MeshContainer>(null);
+		// container2.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Cube);
+		// container2.Position = EVector3.Right * 10.0f;
+
 
 		RunWindow();
 

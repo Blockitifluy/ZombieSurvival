@@ -12,22 +12,7 @@ namespace ZombieSurvival.Engine.Graphics;
 
 public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : GameWindow(gameWindowSettings, nativeWindowSettings)
 {
-	// In NDC, (0, 0) is the center of the screen.
-	// Negative X coordinates move to the left, positive X move to the right.
-	// Negative Y coordinates move to the bottom, positive Y move to the top.
-	// OpenGL only supports rendering in 3D, so to create a flat triangle, the Z coordinate will be kept as 0.
-	private readonly float[] Vertices = [
-	 	// Position         Texture coordinates
-             0.5f,  0.5f, 0.0f, 1.0f, 1.0f, // top right
-             0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // bottom right
-            -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
-            -0.5f,  0.5f, 0.0f, 0.0f, 1.0f  // top left
-	];
-
-	private readonly uint[] Indices = [
-		0, 1, 3,
-		1, 2, 3
-	];
+	public List<MeshContainer> MeshContainers = [];
 
 	int ElementBufferObject;
 	int VertexBufferObject;
@@ -58,11 +43,9 @@ public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings 
 
 		VertexBufferObject = GL.GenBuffer();
 		GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferObject);
-		GL.BufferData(BufferTarget.ArrayBuffer, Vertices.Length * sizeof(float), Vertices, BufferUsageHint.StaticDraw);
 
 		ElementBufferObject = GL.GenBuffer();
 		GL.BindBuffer(BufferTarget.ElementArrayBuffer, ElementBufferObject);
-		GL.BufferData(BufferTarget.ElementArrayBuffer, Indices.Length * sizeof(uint), Indices, BufferUsageHint.StaticDraw);
 
 		Shader = new Shader("shaders/shader.vert", "shaders/shader.frag");
 		Shader.Use();
@@ -102,16 +85,40 @@ public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings 
 
 		GL.BindVertexArray(VertexArrayObject);
 
-		MTexture0.Use(TextureUnit.Texture0);
-		MTexture1.Use(TextureUnit.Texture1);
-		Shader.Use();
+		foreach (Node node in Tree.GetTree().GetAllNodes())
+		{
+			if (node is not MeshContainer container)
+			{
+				continue;
+			}
 
-		var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(Time));
-		Shader.SetMatrix4("model", model);
-		Shader.SetMatrix4("view", CurrentCamera.GetViewMatrix());
-		Shader.SetMatrix4("projection", CurrentCamera.GetProjectionMatrix());
 
-		GL.DrawElements(PrimitiveType.Triangles, Indices.Length, DrawElementsType.UnsignedInt, 0);
+			if (container.Mesh is null)
+			{
+				continue;
+			}
+
+			Mesh mesh = container.Mesh;
+
+			float[] feed = mesh.IntoFeed(Vector3.Zero, container.GlobalScale);
+
+			GL.BufferData(BufferTarget.ElementArrayBuffer, mesh.Indices.Length * sizeof(uint), mesh.Indices, BufferUsageHint.StaticDraw);
+			GL.BufferData(BufferTarget.ArrayBuffer, feed.Length * sizeof(float), feed, BufferUsageHint.StaticDraw);
+
+			// TODO - Load Custom Textures
+			MTexture0.Use(TextureUnit.Texture0);
+			MTexture1.Use(TextureUnit.Texture1);
+			Shader.Use();
+
+			Matrix4 model = Matrix4.CreateTranslation((GLVector3)container.Position)
+			* Matrix4.CreateFromQuaternion(container.GlobalQuaternion);
+
+			Shader.SetMatrix4("model", model);
+			Shader.SetMatrix4("view", CurrentCamera.GetViewMatrix());
+			Shader.SetMatrix4("projection", CurrentCamera.GetProjectionMatrix());
+
+			GL.DrawElements(mesh.PrimitiveType, mesh.Indices.Length, DrawElementsType.UnsignedInt, 0);
+		}
 
 		SwapBuffers();
 	}

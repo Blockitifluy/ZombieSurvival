@@ -124,6 +124,11 @@ public class Shader : IDisposable
 		}
 	}
 
+	internal void SetMatrix4(string v, object model)
+	{
+		throw new NotImplementedException();
+	}
+
 	public Shader(string vertPath, string fragPath)
 	{
 		var shaderSource = File.ReadAllText(vertPath);
