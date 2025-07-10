@@ -12,8 +12,6 @@ namespace ZombieSurvival.Engine.Graphics;
 
 public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : GameWindow(gameWindowSettings, nativeWindowSettings)
 {
-	public List<MeshContainer> MeshContainers = [];
-
 	int ElementBufferObject;
 	int VertexBufferObject;
 	int VertexArrayObject;
@@ -26,7 +24,6 @@ public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings 
 	private Texture MTexture1;
 
 	private static Camera? CurrentCamera => Camera.CurrentCamera;
-	private double Time;
 
 	protected override void OnLoad()
 	{
@@ -76,8 +73,6 @@ public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings 
 	protected override void OnRenderFrame(FrameEventArgs e)
 	{
 		base.OnRenderFrame(e);
-
-		Time += 4.0 * e.Time;
 
 		ArgumentNullException.ThrowIfNull(CurrentCamera, nameof(CurrentCamera));
 

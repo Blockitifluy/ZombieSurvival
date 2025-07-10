@@ -1,5 +1,4 @@
-﻿using OpenTK.Graphics.OpenGL4;
-using OpenTK.Mathematics;
+﻿using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using ZombieSurvival.Engine;
@@ -9,6 +8,8 @@ using ZombieSurvival.Nodes;
 using ZombieSurvival.Nodes.Character;
 
 namespace ZombieSurvival;
+
+// TODO - Write Tests
 
 public static class Program
 {
@@ -47,13 +48,12 @@ public static class Program
 		MeshContainer container1 = Node.New<MeshContainer>(null);
 		container1.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Triangle);
 		container1.Position = EVector3.Right * 5.0f;
-		container0.Rotation = EVector3.Up * 5;
-		container1.Scale = EVector3.One * 5.0f;
+		container1.Rotation = EVector3.Up * 5;
+		container1.Scale = EVector3.One * 2.0f;
 
-		// MeshContainer container2 = Node.New<MeshContainer>(null);
-		// container2.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Cube);
-		// container2.Position = EVector3.Right * 10.0f;
-
+		MeshContainer container2 = Node.New<MeshContainer>(null);
+		container2.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Cube);
+		container2.Position = EVector3.Up * 10.0f;
 
 		RunWindow();
 

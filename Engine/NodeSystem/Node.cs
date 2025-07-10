@@ -5,13 +5,14 @@ public class Node
     private Node? _Parent;
     public Node? Parent
     {
-        get { return _Parent; }
+        get => _Parent;
         set
         {
             if (value == this)
             {
                 throw new TreeException($"Circular Heiarchry attemped on {this}");
             }
+            OnParent(value);
             _Parent = value;
         }
     }
@@ -40,15 +41,45 @@ public class Node
         return null;
     }
 
-    public IEnumerable<Node> GetChildren()
+    public List<Node> GetChildren()
     {
+        List<Node> nodes = [];
         foreach (Node node in GetTree().GetAllNodes())
         {
             if (node.Parent == this)
             {
-                yield return node;
+                nodes.Add(node);
             }
         }
+        return nodes;
+    }
+
+    public bool IsDesendent(Node other)
+    {
+        Node? current = Parent;
+        while (current != null)
+        {
+            if (other == current)
+            {
+                return true;
+            }
+            current = current.Parent;
+        }
+        return false;
+    }
+
+    public List<Node> GetDesendents()
+    {
+        List<Node> nodes = [];
+        foreach (Node node in GetTree().GetAllNodes())
+        {
+            bool isDesendent = node.IsDesendent(this);
+            if (isDesendent)
+            {
+                nodes.Add(node);
+            }
+        }
+        return nodes;
     }
 
     public override string ToString()
@@ -75,10 +106,19 @@ public class Node
         Console.WriteLine($"Started {this}");
     }
 
+    protected virtual void OnParent(Node? futureParent) { }
+
     public void Destroy()
     {
-        // TODO - Also destroy descenants
-        GetTree().UnregisterNode(this);
+        Tree tree = GetTree();
+
+        var desendents = GetDesendents();
+        foreach (Node node in desendents)
+        {
+            node.Parent = null;
+            tree.UnregisterNode(node);
+        }
+        tree.UnregisterNode(this);
     }
 
     public static TNode New<TNode>(Node? parent = null, string? name = null) where TNode : Node, new()

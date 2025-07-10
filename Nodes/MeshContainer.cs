@@ -1,4 +1,5 @@
 using ZombieSurvival.Engine;
+using ZombieSurvival.Engine.NodeSystem;
 
 namespace ZombieSurvival.Nodes;
 
