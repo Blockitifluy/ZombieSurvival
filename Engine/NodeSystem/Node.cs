@@ -10,8 +10,19 @@ public class Node
         {
             if (value == this)
             {
-                throw new TreeException($"Circular Heiarchry attemped on {this}");
+                throw new TreeException($"Can not parent to self");
             }
+
+            if (value is not null)
+            {
+                bool isDescendant = IsDescendant(value),
+                isAncestor = IsAncestor(value);
+                if (isDescendant || isAncestor)
+                {
+                    throw new TreeException($"Circular Heiarchry attemped on {this}");
+                }
+            }
+
             OnParent(value);
             _Parent = value;
         }
@@ -37,7 +48,19 @@ public class Node
                 return tNode;
             }
         }
+        return null;
+    }
 
+    public TNode? FindFirstChildOfType<TNode>() where TNode : Node
+    {
+        foreach (Node node in GetTree().GetAllNodes())
+        {
+            bool parentMatch = node.Parent == this;
+            if (parentMatch && node is TNode tNode)
+            {
+                return tNode;
+            }
+        }
         return null;
     }
 
@@ -54,7 +77,7 @@ public class Node
         return nodes;
     }
 
-    public bool IsDesendent(Node other)
+    public bool IsDescendant(Node other)
     {
         Node? current = Parent;
         while (current != null)
@@ -68,16 +91,34 @@ public class Node
         return false;
     }
 
-    public List<Node> GetDesendents()
+    public bool IsAncestor(Node other)
+    {
+        return IsDescendant(other);
+    }
+
+    public List<Node> GetDescendant()
     {
         List<Node> nodes = [];
         foreach (Node node in GetTree().GetAllNodes())
         {
-            bool isDesendent = node.IsDesendent(this);
+            bool isDesendent = node.IsDescendant(this);
             if (isDesendent)
             {
                 nodes.Add(node);
             }
+        }
+        return nodes;
+    }
+
+    public List<Node> GetAncestors()
+    {
+        List<Node> nodes = [];
+        Node current = this;
+        while (current.Parent is not null)
+        {
+            Node parent = current.Parent;
+            nodes.Add(parent);
+            current = parent;
         }
         return nodes;
     }
@@ -112,7 +153,7 @@ public class Node
     {
         Tree tree = GetTree();
 
-        var desendents = GetDesendents();
+        var desendents = GetDescendant();
         foreach (Node node in desendents)
         {
             node.Parent = null;

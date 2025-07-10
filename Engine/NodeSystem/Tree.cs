@@ -12,6 +12,11 @@ public sealed class Tree
 {
     private static Tree? CurrentTree;
 
+    /// <summary>
+    /// Gets the current tree.
+    /// </summary>
+    /// <returns>The current tree</returns>
+    /// <exception cref="TreeException">Fired when the Tree has not been initised.</exception>
     public static Tree GetTree()
     {
         if (CurrentTree != null)
@@ -22,6 +27,11 @@ public sealed class Tree
         throw new TreeException("Tree doesn't exist");
     }
 
+    /// <summary>
+    /// Creates a new Tree.
+    /// </summary>
+    /// <returns>The tree just created.</returns>
+    /// <exception cref="TreeException">Fired when Tree already exists.</exception>
     public static Tree InitaliseTree()
     {
         if (CurrentTree != null)
@@ -35,16 +45,34 @@ public sealed class Tree
 
     private readonly List<Node> Nodes = [];
 
+    /// <summary>
+    /// Gets all node registered in the Tree.
+    /// </summary>
+    /// <returns></returns>
     public List<Node> GetAllNodes()
     {
         return Nodes;
     }
 
+    /// <summary>
+    /// Is this node registered.
+    /// </summary>
+    /// <param name="node">The node being checked.</param>
+    /// <returns>True, if registered.</returns>
     public bool IsNodeRegistered(Node node)
     {
         return Nodes.Contains(node);
     }
 
+    /// <summary>
+    /// Registers a node.
+    /// </summary>
+    /// <remarks>
+    /// Registering means that a node can be updated.
+    /// </remarks>
+    /// <param name="node">The node being registed.</param>
+    /// <returns>The ID to be assigned to the node. Not set by function.</returns>
+    /// <exception cref="TreeException">This node is already registered.</exception>
     public Guid RegisterNode(Node node)
     {
         if (IsNodeRegistered(node))
@@ -57,6 +85,11 @@ public sealed class Tree
         return id;
     }
 
+    /// <summary>
+    /// Unregisters a node.
+    /// </summary>
+    /// <param name="node">The node being unregisted.</param>
+    /// <exception cref="TreeException">This node is already unregistered.</exception>
     public void UnregisterNode(Node node)
     {
         if (!IsNodeRegistered(node))
@@ -64,6 +97,23 @@ public sealed class Tree
             throw new TreeException("This node is not registered");
         }
         Nodes.Remove(node);
+    }
+
+    public void UpdateAllNodes(double delta)
+    {
+        var nodes = GetAllNodes();
+
+        foreach (Node node in nodes)
+        {
+            try
+            {
+                node.Update(delta);
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine($"Uncaught error in {node}\n{err}");
+            }
+        }
     }
 
     internal Tree() { }

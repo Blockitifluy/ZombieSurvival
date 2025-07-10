@@ -4,6 +4,9 @@ namespace ZombieSurvival.Engine;
 
 public class Mesh
 {
+    /// <summary>
+    /// Used in <see cref="GetMeshPrimative"/>.
+    /// </summary>
     public enum MeshPrimitive
     {
         Triangle,
@@ -85,6 +88,12 @@ public class Mesh
         UVs = []
     };
 
+    /// <summary>
+    /// Gets a mesh primative from <see cref="MeshPrimitive"/>.
+    /// </summary>
+    /// <param name="primative">The type of mesh.</param>
+    /// <returns>A mesh</returns>
+    /// <exception cref="NotImplementedException">The wanted mesh was implemented.</exception>
     public static Mesh GetMeshPrimitive(MeshPrimitive primative)
     {
         switch (primative)
@@ -100,11 +109,19 @@ public class Mesh
         }
     }
 
+    /// <summary>
+    /// Allows the mesh to be rendered.
+    /// Contains it's verts (indexes: 0, 1, 2) and UVs (indexes: 3, 4).
+    /// </summary>
+    /// <returns>The mesh as a feed</returns>
     public float[] IntoFeed()
     {
         return IntoFeed(Vector3.Zero, Vector3.One);
     }
 
+    /// <inheritdoc cref="IntoFeed()"/>
+    /// <param name="offset">The offset of mesh.</param>
+    /// <param name="scale">The scale of the mesh.</param>
     public float[] IntoFeed(Vector3 offset, Vector3 scale)
     {
         int feedLength = Vertices.Length * 5;

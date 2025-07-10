@@ -8,8 +8,14 @@ public sealed class Camera : Node3D
     private float _Fov = 90;
     public float AspectRatio;
 
+    /// <summary>
+    /// The camera used for rendering.
+    /// </summary>
     public static Camera? CurrentCamera { get; set; } = null;
 
+    /// <summary>
+    /// Is this camera is used for rendering
+    /// </summary>
     public bool IsCurrentCamera
     {
         get
