@@ -36,7 +36,6 @@ public static class Program
 	public static int Main(string[] args)
 	{
 		Tree.InitaliseTree();
-
 		// TODO - Load From File
 
 		_ = Node.New<Player>(null);
@@ -44,15 +43,19 @@ public static class Program
 		MeshContainer container0 = Node.New<MeshContainer>(null);
 		container0.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Quad);
 		container0.Rotation = EVector3.Right * 135;
+		container0.Texture0 = "uhidsiuosaduiohdsao"; // Expected - Error Texture
 
 		MeshContainer container1 = Node.New<MeshContainer>(null);
 		container1.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Triangle);
 		container1.Position = EVector3.Right * 5.0f;
 		container1.Rotation = EVector3.Up * 5;
 		container1.Scale = EVector3.One * 2.0f;
+		container1.Texture0 = "container.png";
+		container1.Texture1 = "awesome.png";
 
 		MeshContainer container2 = Node.New<MeshContainer>(null);
 		container2.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Cube);
+		container2.Texture0 = "awesome.png";
 		container2.Position = EVector3.Up * 10.0f;
 
 		RunWindow();

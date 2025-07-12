@@ -15,6 +15,17 @@ public static class Input
     [AllowNull]
     public static MouseState MouseState { get; set; }
 
+    public static int InputAxis(Keys neg, Keys pos)
+    {
+        bool negBool = KeyboardState.IsKeyDown(neg),
+        posBool = KeyboardState.IsKeyDown(pos);
+
+        if (negBool && !posBool) return -1;
+        if (posBool) return 1;
+
+        return 0;
+    }
+
     internal static void SendKeyDown(object sender, KeyboardKeyEventArgs e)
     {
         OnKeyDown?.Invoke(sender, e);

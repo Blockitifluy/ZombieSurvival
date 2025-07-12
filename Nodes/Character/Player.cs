@@ -19,37 +19,17 @@ public class Player : Character
     {
         base.Update(delta);
 
-        // TODO - Simplify input using axis
-        var input = Input.KeyboardState;
         float fDelta = (float)delta,
         time = fDelta * 4;
 
-        if (input.IsKeyDown(Keys.W))
-        {
-            Camera.Position += Camera.Front * CameraSpeed * time; // Forward
-        }
-        if (input.IsKeyDown(Keys.S))
-        {
-            Camera.Position -= Camera.Front * CameraSpeed * time; // Backwards
-        }
+        Vector3 xMovement = Camera.Right * Input.InputAxis(Keys.A, Keys.D)
+        * CameraSpeed * time;
+        Vector3 yMovement = Camera.Up * Input.InputAxis(Keys.LeftShift, Keys.Space)
+        * CameraSpeed * time;
+        Vector3 zMovement = Camera.Front * Input.InputAxis(Keys.S, Keys.W)
+        * CameraSpeed * time;
 
-        if (input.IsKeyDown(Keys.A))
-        {
-            Camera.Position -= Camera.Right * CameraSpeed * time; // Left
-        }
-        if (input.IsKeyDown(Keys.D))
-        {
-            Camera.Position += Camera.Right * CameraSpeed * time; // Right
-        }
-
-        if (input.IsKeyDown(Keys.Space))
-        {
-            Camera.Position += Camera.Up * CameraSpeed * time; // Up
-        }
-        if (input.IsKeyDown(Keys.LeftShift))
-        {
-            Camera.Position -= Camera.Up * CameraSpeed * time; // Down
-        }
+        Camera.Position += xMovement + yMovement + zMovement;
 
         // Get the mouse state
         var mouse = Input.MouseState;

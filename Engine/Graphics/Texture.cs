@@ -7,11 +7,15 @@ using System.IO;
 
 namespace ZombieSurvival.Engine.Graphics;
 
-public class Texture(int glHandle)
+public static class Texture
 {
-    public readonly int Handle = glHandle;
+    public const string TextureDirectory = @"resources\textures";
+    public const string ErrorTextureName = "error_texture.png";
+    public const string NullTextureName = "null.png";
 
-    public static Texture LoadFromFile(string path)
+    private static readonly Dictionary<string, int> Textures = [];
+
+    public static int LoadFromFile(string path)
     {
         int handle = GL.GenTexture();
 
@@ -35,13 +39,40 @@ public class Texture(int glHandle)
 
         GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
 
-        return new Texture(handle);
+        return handle;
     }
 
-    public void Use(TextureUnit unit)
+    private static readonly string[] AcceptedExtensions = [".png", ".jpeg", ".jpg", ".bmp"];
+    public static void LoadTextures()
     {
-        GL.ActiveTexture(unit);
-        GL.BindTexture(TextureTarget.Texture2D, Handle);
+        string[] textureNames = Directory.GetFiles(TextureDirectory);
+
+        foreach (string file in textureNames)
+        {
+            string ext = Path.GetExtension(file),
+            fileName = Path.GetFileName(file);
+            if (!AcceptedExtensions.Contains(ext))
+            {
+                Console.WriteLine($"{ext} is not a valid file type (file)");
+                continue;
+            }
+            int handle = LoadFromFile(file);
+            Textures.Add(fileName, handle);
+        }
+    }
+
+    public static int GetTexture(string fileName)
+    {
+        if (string.IsNullOrEmpty(fileName))
+        {
+            return Textures[NullTextureName];
+        }
+
+        if (!Textures.TryGetValue(fileName, out int value))
+        {
+            return Textures[ErrorTextureName];
+        }
+        return value;
     }
 }
 

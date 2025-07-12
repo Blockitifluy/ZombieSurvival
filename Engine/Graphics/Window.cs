@@ -18,10 +18,6 @@ public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings 
 
 	[AllowNull]
 	private Shader Shader;
-	[AllowNull]
-	private Texture MTexture0;
-	[AllowNull]
-	private Texture MTexture1;
 
 	private static Camera? CurrentCamera => Camera.CurrentCamera;
 
@@ -55,14 +51,10 @@ public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings 
 		GL.EnableVertexAttribArray(texCoordLocation);
 		GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
 
-		MTexture0 = Texture.LoadFromFile("resources/container.png");
-		MTexture0.Use(TextureUnit.Texture0);
-
-		MTexture1 = Texture.LoadFromFile("resources/awesome.png");
-		MTexture1.Use(TextureUnit.Texture1);
-
+		Texture.LoadTextures();
 		Shader.SetInt("texture0", 0);
 		Shader.SetInt("texture1", 1);
+
 
 		CurrentCamera.Position = Vector3.Forward * 3;
 		CurrentCamera.AspectRatio = Size.X / (float)Size.Y;
@@ -100,9 +92,17 @@ public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings 
 			GL.BufferData(BufferTarget.ElementArrayBuffer, mesh.Indices.Length * sizeof(uint), mesh.Indices, BufferUsageHint.StaticDraw);
 			GL.BufferData(BufferTarget.ArrayBuffer, feed.Length * sizeof(float), feed, BufferUsageHint.StaticDraw);
 
-			// TODO - Load Custom Textures
-			MTexture0.Use(TextureUnit.Texture0);
-			MTexture1.Use(TextureUnit.Texture1);
+			const int Texture0Position = (int)TextureUnit.Texture0;
+			const int TextureRange = 2;
+
+			for (int i = 0; i < TextureRange; i++)
+			{
+				string textureName = container.Textures[i];
+				TextureUnit tunit = (TextureUnit)(Texture0Position + i);
+				GL.ActiveTexture(tunit);
+				GL.BindTexture(TextureTarget.Texture2D, Texture.GetTexture(textureName));
+			}
+
 			Shader.Use();
 
 			Matrix4 model = Matrix4.CreateTranslation((GLVector3)container.Position)

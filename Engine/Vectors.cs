@@ -58,6 +58,15 @@ public struct Vector3(float x = 0, float y = 0, float z = 0)
         );
     }
 
+    public static Vector3 operator *(float left, Vector3 right)
+    {
+        return new(
+            left * right.X,
+            left * right.Y,
+            left * right.Z
+        );
+    }
+
     public static Vector3 operator +(Vector3 left, Vector3 right)
     {
         return new(
@@ -209,6 +218,14 @@ public struct Vector2(float x = 0, float y = 0)
         return new(
             left.X * right,
             left.Y * right
+        );
+    }
+
+    public static Vector2 operator *(float left, Vector2 right)
+    {
+        return new(
+            left * right.X,
+            left * right.Y
         );
     }
 

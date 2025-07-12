@@ -85,7 +85,17 @@ public class Mesh
             4, 5, 7
         ],
         PrimitiveType = PrimitiveType.Triangles,
-        UVs = []
+        UVs = [
+            new(0, 0),
+            new(1, 0),
+            new(0, 1),
+            new(1, 1),
+
+            new(1, 0),
+            new(0, 0),
+            new(1, 1),
+            new(0, 1)
+        ]
     };
 
     /// <summary>
@@ -96,17 +106,13 @@ public class Mesh
     /// <exception cref="NotImplementedException">The wanted mesh was implemented.</exception>
     public static Mesh GetMeshPrimitive(MeshPrimitive primative)
     {
-        switch (primative)
+        return primative switch
         {
-            case MeshPrimitive.Triangle:
-                return TriangleMesh;
-            case MeshPrimitive.Quad:
-                return QuadMesh;
-            case MeshPrimitive.Cube:
-                return CubeMesh;
-            default:
-                throw new NotImplementedException($"Mesh Primative {primative} not implemented");
-        }
+            MeshPrimitive.Triangle => TriangleMesh,
+            MeshPrimitive.Quad => QuadMesh,
+            MeshPrimitive.Cube => CubeMesh,
+            _ => throw new NotImplementedException($"Mesh Primative {primative} not implemented"),
+        };
     }
 
     /// <summary>
