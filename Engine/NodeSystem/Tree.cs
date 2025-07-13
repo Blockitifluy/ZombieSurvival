@@ -51,7 +51,7 @@ public sealed class Tree
     /// <returns></returns>
     public List<Node> GetAllNodes()
     {
-        return Nodes;
+        return [.. Nodes];
     }
 
     /// <summary>

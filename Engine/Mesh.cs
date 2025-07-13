@@ -1,4 +1,5 @@
 using OpenTK.Graphics.OpenGL4;
+using ZombieSurvival.Engine.NodeSystem.Scene;
 
 namespace ZombieSurvival.Engine;
 
@@ -14,10 +15,14 @@ public class Mesh
         Cube
     }
 
-    public required Vector3[] Vertices;
-    public required int[] Indices;
-    public required Vector2[] UVs;
-    public required PrimitiveType PrimitiveType;
+    [Export]
+    public required Vector3[] Vertices { get; set; }
+    [Export]
+    public required int[] Indices { get; set; }
+    [Export]
+    public required Vector2[] UVs { get; set; }
+    [Export]
+    public required PrimitiveType PrimitiveType { get; set; }
 
     private static readonly Mesh TriangleMesh = new()
     {

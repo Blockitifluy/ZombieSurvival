@@ -3,3 +3,5 @@ bin
 .vscode
 obj
 build
+resources/scenes/*
+!resources/scenes/test.scene

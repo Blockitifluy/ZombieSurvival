@@ -1,8 +1,10 @@
 using OpenTK.Mathematics;
 using ZombieSurvival.Engine.NodeSystem;
+using ZombieSurvival.Engine.NodeSystem.Scene;
 
 namespace ZombieSurvival.Nodes;
 
+[SaveNode("engine.camera")]
 public sealed class Camera : Node3D
 {
     private float _Fov = 90;

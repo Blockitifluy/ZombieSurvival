@@ -1,7 +1,9 @@
 using OpenTK.Mathematics;
+using ZombieSurvival.Engine.NodeSystem.Scene;
 
 namespace ZombieSurvival.Engine.NodeSystem;
 
+[SaveNode("engine.node3d")]
 public class Node3D : Node
 {
     private EVector3 _GlobalPosition;
@@ -14,6 +16,7 @@ public class Node3D : Node
     private EVector3 _Rotation = EVector3.Zero;
     private EVector3 _Scale = EVector3.One;
 
+    [Export]
     public EVector3 Position
     {
         get => _Position;
@@ -23,6 +26,7 @@ public class Node3D : Node
             UpdateTransformations();
         }
     }
+    [Export]
     public EVector3 Rotation
     {
         get => _Rotation;
@@ -33,6 +37,7 @@ public class Node3D : Node
             UpdateTransformations();
         }
     }
+    [Export]
     public EVector3 Scale
     {
         get => _Scale;

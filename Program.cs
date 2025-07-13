@@ -4,12 +4,15 @@ using OpenTK.Windowing.Desktop;
 using ZombieSurvival.Engine;
 using ZombieSurvival.Engine.Graphics;
 using ZombieSurvival.Engine.NodeSystem;
+using ZombieSurvival.Engine.NodeSystem.Scene;
 using ZombieSurvival.Nodes;
 using ZombieSurvival.Nodes.Character;
 
 namespace ZombieSurvival;
 
 // TODO - Write Tests
+// TODO - Convert Mesh file to mesh obj
+// TODO - Save mesh as a file as well as an object if avaibable
 
 public static class Program
 {
@@ -33,17 +36,9 @@ public static class Program
 		}
 	}
 
-	public static int Main(string[] args)
+	public static void CreateTestScene()
 	{
-		Tree.InitaliseTree();
-		// TODO - Load From File
-
 		_ = Node.New<Player>(null);
-
-		MeshContainer container0 = Node.New<MeshContainer>(null);
-		container0.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Quad);
-		container0.Rotation = EVector3.Right * 135;
-		container0.Texture0 = "uhidsiuosaduiohdsao"; // Expected - Error Texture
 
 		MeshContainer container1 = Node.New<MeshContainer>(null);
 		container1.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Triangle);
@@ -52,11 +47,29 @@ public static class Program
 		container1.Scale = EVector3.One * 2.0f;
 		container1.Texture0 = "container.png";
 		container1.Texture1 = "awesome.png";
+		container1.Name = "Object1";
 
-		MeshContainer container2 = Node.New<MeshContainer>(null);
+		MeshContainer container2 = Node.New<MeshContainer>(container1);
 		container2.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Cube);
 		container2.Texture0 = "awesome.png";
 		container2.Position = EVector3.Up * 10.0f;
+		container2.Name = "Object2";
+
+		MeshContainer container0 = Node.New<MeshContainer>(null);
+		container0.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Quad);
+		container0.Rotation = EVector3.Right * 135;
+		container0.Texture0 = "uhidsiuosaduiohdsao"; // Expected - Error Texture
+		container0.Name = "Object0";
+
+		SceneHandler.SaveScene(Tree.GetTree(), "resources/scenes/test.scene");
+	}
+
+	public static int Main(string[] args)
+	{
+		Tree.InitaliseTree();
+
+		// CreateTestScene();
+		SceneHandler.LoadScene(Tree.GetTree(), "resources/scenes/test.scene");
 
 		RunWindow();
 

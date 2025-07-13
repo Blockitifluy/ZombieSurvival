@@ -1,16 +1,20 @@
 using System.Diagnostics.CodeAnalysis;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using ZombieSurvival.Engine;
+using ZombieSurvival.Engine.NodeSystem.Scene;
 
 namespace ZombieSurvival.Nodes.Character;
 
+[SaveNode("zombie-survial.player")]
 public class Player : Character
 {
     [AllowNull]
     public Camera Camera;
 
-    public float CameraSpeed = 1.5f;
-    public float Sensitivity = 0.005f;
+    [Export]
+    public float CameraSpeed { get; set; } = 1.5f;
+    [Export]
+    public float Sensitivity { get; set; } = 0.005f;
 
     private bool FirstMove = true;
     private Vector2 LastPos;
@@ -58,5 +62,6 @@ public class Player : Character
 
         Camera = New<Camera>(null, "PlayerCamera");
         Camera.IsCurrentCamera = true;
+        Camera.Archive = false;
     }
 }

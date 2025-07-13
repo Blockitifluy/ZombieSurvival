@@ -1,5 +1,8 @@
+using ZombieSurvival.Engine.NodeSystem.Scene;
+
 namespace ZombieSurvival.Engine.NodeSystem;
 
+[SaveNode("engine.node")]
 public class Node
 {
     private Node? _Parent;
@@ -27,9 +30,15 @@ public class Node
             _Parent = value;
         }
     }
-    public string Name = "";
+    [ExportAttribute]
+    public string Name { get; set; } = "";
 
-    private Guid _ID;
+    /// <summary>
+    /// Will this Node be saved, when using <see cref="SceneHandler.SaveScene(Tree, string)"/>?
+    /// </summary>
+    public bool Archive = true;
+
+    internal Guid _ID;
     public Guid ID => _ID;
 
     public static Tree GetTree()
@@ -62,6 +71,19 @@ public class Node
             }
         }
         return null;
+    }
+
+    public bool CanBeArchived()
+    {
+        var ancestors = GetAncestors();
+        foreach (Node node in ancestors)
+        {
+            if (!node.Archive)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     public List<Node> GetChildren()
@@ -142,10 +164,7 @@ public class Node
     /// <summary>
     /// Run after the node is registered.
     /// </summary>
-    public virtual void Start()
-    {
-        Console.WriteLine($"Started {this}");
-    }
+    public virtual void Start() { }
 
     protected virtual void OnParent(Node? futureParent) { }
 
@@ -162,13 +181,23 @@ public class Node
         tree.UnregisterNode(this);
     }
 
-    public static TNode New<TNode>(Node? parent = null, string? name = null) where TNode : Node, new()
+    public static TNode NewDisabled<TNode>(Node? parent, string? name = null) where TNode : Node, new()
     {
-        TNode node = new()
+        return new()
         {
             Parent = parent,
             Name = name ?? typeof(TNode).Name
         };
+    }
+
+    public static Node NewDisabled(Node? parent, string? name = null)
+    {
+        return NewDisabled<Node>(parent, name);
+    }
+
+    public static TNode New<TNode>(Node? parent = null, string? name = null) where TNode : Node, new()
+    {
+        TNode node = NewDisabled<TNode>(parent, name);
 
         node.Awake();
         node._ID = GetTree().RegisterNode(node);

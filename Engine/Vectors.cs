@@ -1,14 +1,19 @@
 global using EVector3 = ZombieSurvival.Engine.Vector3;
 
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
+using ZombieSurvival.Engine.NodeSystem.Scene;
 
 namespace ZombieSurvival.Engine;
 
 public struct Vector3(float x = 0, float y = 0, float z = 0)
 {
-    public float X = x;
-    public float Y = y;
-    public float Z = z;
+    [Export]
+    public float X { get; set; } = x;
+    [Export]
+    public float Y { get; set; } = y;
+    [Export]
+    public float Z { get; set; } = z;
 
     public static Vector3 Zero => zero;
     public static Vector3 One => one;
@@ -166,18 +171,20 @@ public struct Vector3(float x = 0, float y = 0, float z = 0)
         }
     }
 
+    [JsonIgnore]
     public readonly float Magnitude
     {
         get { return MathF.Sqrt(X * X + Y * Y + Z * Z); }
     }
 
+    [JsonIgnore]
     public readonly Vector3 Unit => this / Magnitude;
 }
 
 public struct Vector2(float x = 0, float y = 0)
 {
-    public float X = x;
-    public float Y = y;
+    public float X { get; set; } = x;
+    public float Y { get; set; } = y;
 
     public static Vector2 Zero => zero;
     public static Vector2 One => one;
@@ -308,10 +315,12 @@ public struct Vector2(float x = 0, float y = 0)
         }
     }
 
+    [JsonIgnore]
     public readonly float Magnitude
     {
         get { return MathF.Sqrt(X * X + Y * Y); }
     }
 
+    [JsonIgnore]
     public readonly Vector2 Unit => this / Magnitude;
 }
