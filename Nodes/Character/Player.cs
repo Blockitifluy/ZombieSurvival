@@ -50,9 +50,7 @@ public class Player : Character
             var deltaY = mouse.Y - LastPos.Y;
             LastPos = new Vector2(mouse.X, mouse.Y);
 
-            // Apply the camera pitch and yaw (we clamp the pitch in the camera class)
-            Camera.Yaw += deltaX * Sensitivity;
-            Camera.Pitch -= deltaY * Sensitivity; // Reversed since y-coordinates range from bottom to top
+            Camera.Rotation += new Vector3(deltaX * Sensitivity, deltaY * Sensitivity, 0);
         }
     }
 

@@ -63,36 +63,6 @@ public class Node3D : Node
     public EVector3 Up => _Up;
     public EVector3 Right => _Right;
 
-    /// <summary>
-    /// Y Rotation
-    /// </summary>
-    public float Pitch
-    {
-        get => Rotation.Y;
-        set
-        {
-            // We clamp the pitch value between -89 and 89 to prevent the camera from going upside down, and a bunch
-            // of weird "bugs" when you are using euler angles for rotation.
-            // If you want to read more about this you can try researching a topic called gimbal lock
-            var angle = MathHelper.Clamp(value, -89f, 89f);
-            _Rotation.Y = angle;
-            UpdateVectors();
-        }
-    }
-
-    /// <summary>
-    /// X rotation
-    /// </summary>
-    public float Yaw
-    {
-        get => Rotation.X;
-        set
-        {
-            _Rotation.X = value;
-            UpdateVectors();
-        }
-    }
-
     protected override void OnParent(Node? futureParent)
     {
         base.OnParent(futureParent);
@@ -108,6 +78,18 @@ public class Node3D : Node
         UpdateVectors();
     }
 
+    private void UpdateTransformationsToChildren()
+    {
+        foreach (Node node in GetChildren())
+        {
+            if (node is not Node3D node3D)
+            {
+                continue;
+            }
+            node3D.UpdateTransformationsToChildren();
+        }
+    }
+
     private void UpdateTransformations()
     {
         Vector3 gPosition = Position,
@@ -115,7 +97,11 @@ public class Node3D : Node
         gScale = Scale;
         Node3D current = this;
 
-        _Quaternion = new(Rotation.X, Rotation.Y, Rotation.Z);
+        _Quaternion = new(
+            float.DegreesToRadians(Rotation.X),
+            float.DegreesToRadians(Rotation.Y),
+            float.DegreesToRadians(Rotation.Z)
+        );
 
         while (current.Parent is not null)
         {
@@ -134,10 +120,12 @@ public class Node3D : Node
         _GlobalRotation = gRotation;
         _GlobalScale = gScale;
         _GlobalQuaternion = new(
-            gRotation.X,
-            gRotation.Y,
-            gRotation.Z
+            float.DegreesToRadians(gRotation.X),
+            float.DegreesToRadians(gRotation.Y),
+            float.DegreesToRadians(gRotation.Z)
         );
+
+        UpdateTransformationsToChildren();
     }
 
     /// <summary>
@@ -145,10 +133,13 @@ public class Node3D : Node
     /// </summary>
     private void UpdateVectors()
     {
+        float pitch = Rotation.Y,
+        yaw = Rotation.X;
+
         // First, the front matrix is calculated using some basic trigonometry.
-        _Front.X = MathF.Cos(Pitch) * MathF.Cos(Yaw);
-        _Front.Y = MathF.Sin(Pitch);
-        _Front.Z = MathF.Cos(Pitch) * MathF.Sin(Yaw);
+        _Front.X = MathF.Cos(pitch) * MathF.Cos(yaw);
+        _Front.Y = MathF.Sin(pitch);
+        _Front.Z = MathF.Cos(pitch) * MathF.Sin(yaw);
 
         // We need to make sure the vectors are all normalized, as otherwise we would get some funky results.
         _Front = _Front.Unit;
