@@ -20,6 +20,14 @@ When getting an error check:
 3. Forgot to add the `SaveNode` attribute, or uses the wrong name
 4. Make an issue on the github project
 
+## Build Project
+
+To build the C# use:
+
+```CMD
+./make-build path-to-destination
+```
+
 ## Loading Scenes
 
 ```cmd
@@ -32,6 +40,7 @@ When recieving an error, do the same steps in the [Loading Demo Scene](#loading-
 
 > [!WARNING]
 > Comments in scene files are not supported yet.
+
 > [!NOTE]
 > Editing a file scene directly is not suggested
 
