@@ -5,6 +5,7 @@ using ZombieSurvival.Engine;
 using ZombieSurvival.Engine.Graphics;
 using ZombieSurvival.Engine.NodeSystem;
 using ZombieSurvival.Engine.NodeSystem.Scene;
+using ZombieSurvival.Engine.Physics;
 using ZombieSurvival.Nodes;
 using ZombieSurvival.Nodes.Character;
 
@@ -40,36 +41,41 @@ public static class Program
 	{
 		_ = Node.New<Player>(null);
 
-		MeshContainer container1 = Node.New<MeshContainer>(null);
-		container1.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Triangle);
-		container1.Position = EVector3.Right * 5.0f;
-		container1.Rotation = EVector3.Up * 5;
-		container1.Scale = EVector3.One * 2.0f;
-		container1.Texture0 = "container.png";
-		container1.Texture1 = "awesome.png";
-		container1.Name = "Object1";
+		Mover mover = Node.New<Mover>(null, "awesome-mover");
+		mover.To = EVector3.Forward * 10;
+		mover.Speed = 2f;
 
-		MeshContainer container2 = Node.New<MeshContainer>(container1);
-		container2.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Cube);
-		container2.Texture0 = "awesome.png";
-		container2.Position = EVector3.Up * 10.0f;
-		container2.Name = "Object2";
+		MeshContainer awesomeCube = Node.New<MeshContainer>(mover, "awesome-cube");
+		awesomeCube.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Cube);
+		awesomeCube.Texture0 = "awesome.png";
 
-		MeshContainer container0 = Node.New<MeshContainer>(null);
-		container0.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Quad);
-		container0.Rotation = EVector3.Right * 135;
-		container0.Texture0 = "uhidsiuosaduiohdsao"; // Expected - Error Texture
-		container0.Name = "Object0";
+		Collider collision0 = Node.New<Collider>(mover, "awe-collision");
+		collision0.ApplyCollisionShape(new CubeCollision());
 
-		SceneHandler.SaveScene(Tree.GetTree(), "resources/scenes/test.scene");
+		MeshContainer crateCube = Node.New<MeshContainer>(null, "crate-cube");
+		crateCube.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Cube);
+		crateCube.Position = EVector3.Forward * 5f;
+		crateCube.Texture0 = "container.png";
+
+		Collider collision1 = Node.New<Collider>(crateCube, "crate-collision");
+		collision1.ApplyCollisionShape(new CubeCollision());
+
+		SceneHandler.SaveScene(Tree.GetTree(), "resources/scenes/demo.scene");
 	}
 
 	public static int Main(string[] args)
 	{
-		Tree.InitaliseTree();
+		using Tree tree = Tree.InitaliseTree();
 
-		// CreateTestScene();
-		SceneHandler.LoadScene(Tree.GetTree(), "resources/scenes/test.scene");
+		if (args[0] == "demo")
+		{
+			CreateTestScene();
+		}
+		else if (args[0] == "load")
+		{
+			string path = args[1];
+			SceneHandler.LoadScene(tree, path);
+		}
 
 		RunWindow();
 

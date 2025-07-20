@@ -3,7 +3,7 @@ using ZombieSurvival.Engine.NodeSystem.Scene;
 
 namespace ZombieSurvival.Engine;
 
-public class Mesh
+public sealed class Mesh
 {
     /// <summary>
     /// Used in <see cref="GetMeshPrimative"/>.

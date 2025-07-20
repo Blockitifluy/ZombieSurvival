@@ -20,6 +20,29 @@ public sealed class SaveNodeAttribute(string savedName) : Attribute
     public readonly string SavedName = savedName;
 }
 
+[Serializable]
+public class MalformedSceneException : Exception
+{
+    public MalformedSceneException() { }
+    public MalformedSceneException(string message) : base(message) { }
+    public MalformedSceneException(string message, Exception inner) : base(message, inner) { }
+}
+
+[Serializable]
+public class LoadingNodeException : Exception
+{
+    public static void ThrowIfNull([NotNull] object? obj, string msg)
+    {
+        if (obj is null)
+        {
+            throw new LoadingNodeException(msg);
+        }
+    }
+    public LoadingNodeException() { }
+    public LoadingNodeException(string message) : base(message) { }
+    public LoadingNodeException(string message, System.Exception inner) : base(message, inner) { }
+}
+
 public static partial class SceneHandler
 {
     #region Saving Scene
@@ -38,7 +61,7 @@ public static partial class SceneHandler
         public ExportProp(PropertyInfo info, Node node)
         {
             object? value = info.GetValue(node);
-            Type valueType = info.PropertyType;
+            Type valueType = value == null ? info.PropertyType : value.GetType();
 
             string json = JsonSerializer.Serialize(value, JSONOptions);
 
@@ -59,7 +82,7 @@ public static partial class SceneHandler
         foreach (var info in properties)
         {
             ExportAttribute? exportAttribute = info.GetCustomAttribute<ExportAttribute>(true);
-            if (exportAttribute == null)
+            if (exportAttribute is null)
             {
                 continue;
             }
@@ -79,14 +102,14 @@ public static partial class SceneHandler
 
         foreach (ExportProp export in exports)
         {
-            builder.AppendLine($"\t{export.Name}={export.Json}");
+            builder.AppendLine($"\t{export.ValueType} {export.Name}={export.Json}");
         }
         return builder.ToString();
     }
 
     private static bool TryToGetParentLocalID(Node child, Dictionary<Node, Guid> nodeToID, out Guid id)
     {
-        if (child.Parent == null)
+        if (child.Parent is null)
         {
             id = Guid.Empty;
             return false;
@@ -124,7 +147,7 @@ public static partial class SceneHandler
         {
             var saveNode = node.GetType().GetCustomAttribute<SaveNodeAttribute>(false);
 
-            if (saveNode == null)
+            if (saveNode is null)
             {
                 continue;
             }
@@ -154,7 +177,7 @@ public static partial class SceneHandler
         timer.Stop();
 
         long msTaken = timer.ElapsedMilliseconds;
-        Console.WriteLine($"Saving Scene has taken {(double)msTaken / 1000} seconds");
+        Console.WriteLine($"Saving Scene taken {(double)msTaken / 1000} seconds");
     }
     #endregion
 
@@ -164,10 +187,11 @@ public static partial class SceneHandler
     {
         public required string Key;
         public required string Value;
+        public required Type ValueType;
 
         public override readonly string ToString()
         {
-            return $"Import Property {Key}={Value}";
+            return $"Import Property {ValueType} {Key}={Value}";
         }
     }
 
@@ -184,29 +208,6 @@ public static partial class SceneHandler
         }
 
         public ImportNode() { }
-    }
-
-    [Serializable]
-    public class MalformedSceneException : Exception
-    {
-        public MalformedSceneException() { }
-        public MalformedSceneException(string message) : base(message) { }
-        public MalformedSceneException(string message, Exception inner) : base(message, inner) { }
-    }
-
-    [Serializable]
-    public class LoadingNodeException : Exception
-    {
-        public static void ThrowIfNull([NotNull] object? obj, string msg)
-        {
-            if (obj == null)
-            {
-                throw new LoadingNodeException(msg);
-            }
-        }
-        public LoadingNodeException() { }
-        public LoadingNodeException(string message) : base(message) { }
-        public LoadingNodeException(string message, System.Exception inner) : base(message, inner) { }
     }
 
     private static ImportNode ParseImportNode(Match nodeMatch)
@@ -238,13 +239,18 @@ public static partial class SceneHandler
     {
         var groups = propMatch.Groups;
 
-        string name = groups[1].Value,
-        value = groups[2].Value;
+        string typeName = groups[1].Value,
+        name = groups[2].Value,
+        value = groups[3].Value;
+
+        Type? type = Type.GetType(typeName);
+        ArgumentNullException.ThrowIfNull(type, nameof(typeName));
 
         ImportProp importProp = new()
         {
             Key = name,
-            Value = value
+            Value = value,
+            ValueType = type
         };
 
         return importProp;
@@ -254,10 +260,13 @@ public static partial class SceneHandler
     {
         List<ImportNode> importNodes = [];
 
+        int i = 0;
+
         while (sceneStream.Peek() >= 0)
         {
+            i++;
             string? line = sceneStream.ReadLine();
-            if (line == null)
+            if (line is null)
             {
                 continue;
             }
@@ -284,7 +293,7 @@ public static partial class SceneHandler
             }
             else
             {
-                throw new MalformedSceneException("Line is not a property or node!");
+                throw new MalformedSceneException($"Line {i} is not a property or node!");
             }
         }
 
@@ -319,7 +328,7 @@ public static partial class SceneHandler
 
                 byte[] jsonBytes = Encoding.UTF8.GetBytes(prop.Value);
 
-                object? value = JsonSerializer.Deserialize(jsonBytes, info.PropertyType, JSONOptions);
+                object? value = JsonSerializer.Deserialize(jsonBytes, prop.ValueType, JSONOptions);
 
                 info.SetValue(node, value);
             }
@@ -364,7 +373,7 @@ public static partial class SceneHandler
     [GeneratedRegex(NodeRegex)]
     private static partial Regex RegexNode();
 
-    const string PropRegex = @"^\s*([\w\d]+?)=(.+?)$";
+    const string PropRegex = @"^\s*(.+?) ([\w\d]+?)=(.+?)$";
 
     [GeneratedRegex(PropRegex)]
     private static partial Regex RegexProp();
@@ -387,7 +396,7 @@ public static partial class SceneHandler
         {
             var saveNode = type.GetCustomAttribute<SaveNodeAttribute>();
 
-            if (saveNode == null)
+            if (saveNode is null)
             {
                 continue;
             }

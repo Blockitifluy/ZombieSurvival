@@ -6,7 +6,6 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using ZombieSurvival.Engine.NodeSystem;
-using ZombieSurvival.Nodes;
 
 namespace ZombieSurvival.Engine.Graphics;
 
@@ -105,7 +104,7 @@ public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings 
 
 			Shader.Use();
 
-			Matrix4 model = Matrix4.CreateTranslation((GLVector3)container.Position)
+			Matrix4 model = Matrix4.CreateTranslation((GLVector3)container.GlobalPosition)
 			* Matrix4.CreateFromQuaternion(container.GlobalQuaternion);
 
 			Shader.SetMatrix4("model", model);

@@ -4,4 +4,4 @@ bin
 obj
 build
 resources/scenes/*
-!resources/scenes/test.scene
+!resources/scenes/demo.scene

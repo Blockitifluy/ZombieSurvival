@@ -44,7 +44,6 @@ public class Node3D : Node
         set
         {
             _Scale = value;
-            UpdateVectors();
             UpdateTransformations();
         }
     }
@@ -57,7 +56,7 @@ public class Node3D : Node
 
     private EVector3 _Front = EVector3.Forward;
     private EVector3 _Up = EVector3.Up;
-    private EVector3 _Right = -EVector3.Right;
+    private EVector3 _Right = EVector3.Right;
 
     public EVector3 Front => _Front;
     public EVector3 Up => _Up;
@@ -86,11 +85,11 @@ public class Node3D : Node
             {
                 continue;
             }
-            node3D.UpdateTransformationsToChildren();
+            node3D.UpdateTransformations();
         }
     }
 
-    private void UpdateTransformations()
+    protected virtual void UpdateTransformations()
     {
         Vector3 gPosition = Position,
         gRotation = Rotation,
@@ -112,7 +111,7 @@ public class Node3D : Node
 
             gPosition += node3D.Position;
             gRotation += node3D.Rotation;
-            gScale += node3D.Scale;
+            gScale *= node3D.Scale;
             current = node3D;
         }
 

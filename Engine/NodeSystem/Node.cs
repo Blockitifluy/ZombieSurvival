@@ -30,7 +30,7 @@ public class Node
             _Parent = value;
         }
     }
-    [ExportAttribute]
+    [Export]
     public string Name { get; set; } = "";
 
     /// <summary>
@@ -102,7 +102,7 @@ public class Node
     public bool IsDescendant(Node other)
     {
         Node? current = Parent;
-        while (current != null)
+        while (current is not null)
         {
             if (other == current)
             {
@@ -157,6 +157,14 @@ public class Node
     public virtual void Update(double delta) { }
 
     /// <summary>
+    /// Runs at a fixed rate.
+    /// </summary>
+    /// <remarks>
+    /// To get the time passed between calls use <seealso cref="Tree.FixedUpdateTime"/>.
+    /// </remarks>
+    public virtual void UpdateFixed() { }
+
+    /// <summary>
     /// Runs before the node is registered.
     /// </summary>
     public virtual void Awake() { }
@@ -180,6 +188,8 @@ public class Node
         }
         tree.UnregisterNode(this);
     }
+
+    #region Node Creation
 
     public static TNode NewDisabled<TNode>(Node? parent, string? name = null) where TNode : Node, new()
     {
@@ -211,10 +221,10 @@ public class Node
         return New<Node>(parent, name);
     }
 
+    #endregion
+
     ~Node()
     {
-        Console.WriteLine("Bye!");
-
         GetTree().UnregisterNode(this);
     }
 }

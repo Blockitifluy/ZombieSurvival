@@ -2,7 +2,7 @@ using OpenTK.Mathematics;
 using ZombieSurvival.Engine.NodeSystem;
 using ZombieSurvival.Engine.NodeSystem.Scene;
 
-namespace ZombieSurvival.Nodes;
+namespace ZombieSurvival.Engine;
 
 [SaveNode("engine.camera")]
 public sealed class Camera : Node3D

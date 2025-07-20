@@ -8,7 +8,7 @@ public class TreeException : Exception
     public TreeException(string message, Exception inner) : base(message, inner) { }
 }
 
-public sealed class Tree
+public sealed class Tree : IDisposable
 {
     private static Tree? CurrentTree;
 
@@ -19,7 +19,7 @@ public sealed class Tree
     /// <exception cref="TreeException">Fired when the Tree has not been initised.</exception>
     public static Tree GetTree()
     {
-        if (CurrentTree != null)
+        if (CurrentTree is not null)
         {
             return CurrentTree;
         }
@@ -34,7 +34,7 @@ public sealed class Tree
     /// <exception cref="TreeException">Fired when Tree already exists.</exception>
     public static Tree InitaliseTree()
     {
-        if (CurrentTree != null)
+        if (CurrentTree is not null)
         {
             throw new TreeException("Tree already exists");
         }
@@ -116,5 +116,38 @@ public sealed class Tree
         }
     }
 
-    internal Tree() { }
+    // In milliseconds
+    public const int FixedUpdateTime = 50;
+
+    public static double FixedUpdateSeconds => (double)50 / 1000;
+
+    public void UpdateAllNodesFixed(object? state)
+    {
+        var nodes = GetAllNodes();
+
+
+        foreach (Node node in nodes)
+        {
+            try
+            {
+                node.UpdateFixed();
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine($"Uncaught error in {node}\n{err}");
+            }
+        }
+    }
+
+    private readonly Timer FixedUpdateTimer;
+
+    void IDisposable.Dispose()
+    {
+        FixedUpdateTimer.Dispose();
+    }
+
+    internal Tree()
+    {
+        FixedUpdateTimer = new(UpdateAllNodesFixed, null, 0, FixedUpdateTime);
+    }
 }

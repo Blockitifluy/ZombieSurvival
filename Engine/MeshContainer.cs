@@ -1,15 +1,14 @@
-using ZombieSurvival.Engine;
 using ZombieSurvival.Engine.Graphics;
 using ZombieSurvival.Engine.NodeSystem;
 using ZombieSurvival.Engine.NodeSystem.Scene;
 
-namespace ZombieSurvival.Nodes;
+namespace ZombieSurvival.Engine;
 
 [SaveNode("engine.mesh-container")]
 /// <summary>
 /// Uses a mesh and textures to be rendered.
 /// </summary>
-public class MeshContainer : Node3D
+public sealed class MeshContainer : Node3D
 {
     [Export]
     public Mesh? Mesh { get; set; }
