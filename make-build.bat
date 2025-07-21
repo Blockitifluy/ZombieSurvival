@@ -6,7 +6,7 @@ if [%1] equ [] (
 )
 
 REM Building
-dotnet build "%0\..\ZombieSurvival.csproj" --output %1
+dotnet publish "%0\..\ZombieSurvival.csproj" --output %1
 if %errorlevel% neq 0 (
 	echo Build failed
 	exit /b %errorlevel%
