@@ -13,6 +13,7 @@ if %errorlevel% neq 0 (
 )
 
 REM Coping folders
-xcopy "%0\..\shaders" "%1\shaders\" /E /I /Y
-xcopy "%0\..\resources" "%1\resources\" /E /I /Y
-DEL "%1\resources\*.*" /F /Q
+xcopy "%0\..\shaders" "%1\shaders" /E /I /Y
+xcopy "%0\..\resources" "%1\resources" /E /I /Y
+DEL "%1\resources\scenes\*.*" /F /Q
+DEL "%1\resources\meshs\*.*" /F /Q

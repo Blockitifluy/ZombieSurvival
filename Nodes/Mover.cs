@@ -1,7 +1,5 @@
 using ZombieSurvival.Engine.NodeSystem;
 using ZombieSurvival.Engine;
-using ZombieSurvival.Engine.NodeSystem.Scene;
-using ZombieSurvival.Engine.Physics;
 
 namespace ZombieSurvival.Nodes;
 

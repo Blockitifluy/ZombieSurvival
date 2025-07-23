@@ -1,6 +1,5 @@
 using OpenTK.Mathematics;
 using ZombieSurvival.Engine.NodeSystem;
-using ZombieSurvival.Engine.NodeSystem.Scene;
 
 namespace ZombieSurvival.Engine;
 

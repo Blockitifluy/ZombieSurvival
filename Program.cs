@@ -4,7 +4,6 @@ using OpenTK.Windowing.Desktop;
 using ZombieSurvival.Engine;
 using ZombieSurvival.Engine.Graphics;
 using ZombieSurvival.Engine.NodeSystem;
-using ZombieSurvival.Engine.NodeSystem.Scene;
 using ZombieSurvival.Engine.Physics;
 using ZombieSurvival.Nodes;
 using ZombieSurvival.Nodes.Character;
@@ -13,7 +12,6 @@ namespace ZombieSurvival;
 
 // TODO - Write Tests
 // TODO - Convert Mesh file to mesh obj
-// TODO - Save mesh as a file as well as an object if avaibable
 
 public static class Program
 {
@@ -47,6 +45,7 @@ public static class Program
 
 		MeshContainer awesomeCube = Node.New<MeshContainer>(mover, "awesome-cube");
 		awesomeCube.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Cube);
+		awesomeCube.Mesh.SaveResource("resources/meshs/cube.mesh");
 		awesomeCube.Texture0 = "awesome.png";
 
 		Collider collision0 = Node.New<Collider>(mover, "awe-collision");
@@ -63,15 +62,29 @@ public static class Program
 		SceneHandler.SaveScene(Tree.GetTree(), "resources/scenes/demo.scene");
 	}
 
+	public const string ProgramHelp = """
+	demo - Loads and save the demo level
+	load [path to scene] - Loads the scene from the file
+	""";
+
 	public static int Main(string[] args)
 	{
 		using Tree tree = Tree.InitaliseTree();
 
-		if (args[0] == "demo")
+		if (args.Length == 0)
+		{
+			Console.WriteLine(ProgramHelp);
+
+			return 0;
+		}
+
+		string cmd = args[0];
+
+		if (cmd == "demo")
 		{
 			CreateTestScene();
 		}
-		else if (args[0] == "load")
+		else if (cmd == "load")
 		{
 			string path = args[1];
 			SceneHandler.LoadScene(tree, path);

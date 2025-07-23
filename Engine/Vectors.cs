@@ -2,17 +2,13 @@ global using EVector3 = ZombieSurvival.Engine.Vector3;
 
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
-using ZombieSurvival.Engine.NodeSystem.Scene;
 
 namespace ZombieSurvival.Engine;
 
 public struct Vector3(float x = 0, float y = 0, float z = 0)
 {
-    [Export]
     public float X { get; set; } = x;
-    [Export]
     public float Y { get; set; } = y;
-    [Export]
     public float Z { get; set; } = z;
 
     public static Vector3 Zero => zero;

@@ -6,7 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
-namespace ZombieSurvival.Engine.NodeSystem.Scene;
+namespace ZombieSurvival.Engine.NodeSystem;
 
 [AttributeUsage(AttributeTargets.Property, Inherited = true, AllowMultiple = false)]
 public sealed class ExportAttribute : Attribute
@@ -48,10 +48,30 @@ public static partial class SceneHandler
     #region Saving Scene
     private struct ExportProp
     {
+        public object? PropValue;
+        public bool IsResource = false;
+
         public string Name;
-        public string Json;
+        public string ValueString;
+
         public Type ValueType;
         public Type NodeType;
+
+        public string Save()
+        {
+            string exportValue = ValueString;
+
+            StringBuilder builder = new();
+            builder.Append($"\t{ValueType} ");
+
+            if (IsResource) // Adds resource flag
+            {
+                builder.Append($"{Resource.ResourceFlag} ");
+            }
+            builder.Append($"{Name}={exportValue}");
+
+            return builder.ToString();
+        }
 
         public override readonly string ToString()
         {
@@ -60,13 +80,21 @@ public static partial class SceneHandler
 
         public ExportProp(PropertyInfo info, Node node)
         {
-            object? value = info.GetValue(node);
-            Type valueType = value == null ? info.PropertyType : value.GetType();
+            PropValue = info.GetValue(node);
+            Type valueType = PropValue == null ? info.PropertyType : PropValue.GetType();
 
-            string json = JsonSerializer.Serialize(value, JSONOptions);
+            if (Resource.IsSavedResource(PropValue, out string? path))
+            {
+                IsResource = true;
+                ValueString = path!;
+            }
+            else
+            {
+                string json = JsonSerializer.Serialize(PropValue, valueType, JSONOptions);
+                ValueString = json;
+            }
 
             Name = info.Name;
-            Json = json;
             ValueType = valueType;
             NodeType = node.GetType();
         }
@@ -102,7 +130,7 @@ public static partial class SceneHandler
 
         foreach (ExportProp export in exports)
         {
-            builder.AppendLine($"\t{export.ValueType} {export.Name}={export.Json}");
+            builder.AppendLine(export.Save());
         }
         return builder.ToString();
     }
@@ -182,12 +210,13 @@ public static partial class SceneHandler
     #endregion
 
     #region Loading Scene
-
+    // TODO - Add resource support
     private struct ImportProp
     {
         public required string Key;
         public required string Value;
         public required Type ValueType;
+        public required bool IsResource;
 
         public override readonly string ToString()
         {
@@ -240,8 +269,10 @@ public static partial class SceneHandler
         var groups = propMatch.Groups;
 
         string typeName = groups[1].Value,
-        name = groups[2].Value,
-        value = groups[3].Value;
+        name = groups[3].Value,
+        value = groups[4].Value;
+
+        bool isResource = groups[2].Value == "r";
 
         Type? type = Type.GetType(typeName);
         ArgumentNullException.ThrowIfNull(type, nameof(typeName));
@@ -250,7 +281,8 @@ public static partial class SceneHandler
         {
             Key = name,
             Value = value,
-            ValueType = type
+            ValueType = type,
+            IsResource = isResource
         };
 
         return importProp;
@@ -277,9 +309,17 @@ public static partial class SceneHandler
 
             if (nodeMatch.Success)
             {
-                ImportNode importNode = ParseImportNode(nodeMatch);
+                try
+                {
+                    ImportNode importNode = ParseImportNode(nodeMatch);
 
-                importNodes.Add(importNode);
+                    importNodes.Add(importNode);
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine($"Error thrown on line {i}");
+                    throw;
+                }
             }
             else if (propMatch.Success)
             {
@@ -300,6 +340,34 @@ public static partial class SceneHandler
         return importNodes;
     }
 
+    private static void SetPropertiesOfNode(List<ImportProp> importProps, Type nodeType, Node node)
+    {
+        foreach (ImportProp prop in importProps)
+        {
+            PropertyInfo? info = nodeType.GetProperty(prop.Key);
+            LoadingNodeException.ThrowIfNull(info, $"Propetry {prop.Key} doesn't exist on {node}.");
+
+            if (!info.CanWrite)
+            {
+                throw new LoadingNodeException($"Propetry {prop.Key} does exist but can't be set.");
+            }
+
+            object? value;
+            if (prop.IsResource)
+            {
+                value = Resource.LoadResourceFromFile(prop.Value, prop.ValueType);
+            }
+            else
+            {
+                byte[] jsonBytes = Encoding.UTF8.GetBytes(prop.Value);
+                value = JsonSerializer.Deserialize(jsonBytes, prop.ValueType, JSONOptions);
+            }
+
+
+            info.SetValue(node, value);
+        }
+    }
+
     private static Dictionary<Guid, Node> LoadNodesFromImport(List<ImportNode> importNodes)
     {
         Dictionary<Guid, Node> IDToNode = [];
@@ -316,22 +384,7 @@ public static partial class SceneHandler
                 node.Parent = parentNode;
             }
 
-            foreach (ImportProp prop in import.Propetries)
-            {
-                PropertyInfo? info = nodeType.GetProperty(prop.Key);
-                LoadingNodeException.ThrowIfNull(info, $"Propetry {prop.Key} doesn't exist on {node}.");
-
-                if (!info.CanWrite)
-                {
-                    throw new LoadingNodeException($"Propetry {prop.Key} does exist but can't be set.");
-                }
-
-                byte[] jsonBytes = Encoding.UTF8.GetBytes(prop.Value);
-
-                object? value = JsonSerializer.Deserialize(jsonBytes, prop.ValueType, JSONOptions);
-
-                info.SetValue(node, value);
-            }
+            SetPropertiesOfNode(import.Propetries, nodeType, node);
 
             IDToNode.Add(import.LocalID, node);
         }
@@ -373,7 +426,7 @@ public static partial class SceneHandler
     [GeneratedRegex(NodeRegex)]
     private static partial Regex RegexNode();
 
-    const string PropRegex = @"^\s*(.+?) ([\w\d]+?)=(.+?)$";
+    const string PropRegex = @"^\s*([\w\d.]+?)\s+(?:(r)\s+)?([\w\d]+?)=(.+?)$";
 
     [GeneratedRegex(PropRegex)]
     private static partial Regex RegexProp();

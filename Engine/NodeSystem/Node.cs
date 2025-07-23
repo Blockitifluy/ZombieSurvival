@@ -1,5 +1,3 @@
-using ZombieSurvival.Engine.NodeSystem.Scene;
-
 namespace ZombieSurvival.Engine.NodeSystem;
 
 [SaveNode("engine.node")]
@@ -46,6 +44,8 @@ public class Node
         return Tree.GetTree();
     }
 
+    #region Hierarchary
+    /// <returns></returns>
     public TNode? FindFirstChild<TNode>(string name) where TNode : Node
     {
         foreach (Node node in GetTree().GetAllNodes())
@@ -118,6 +118,18 @@ public class Node
         return IsDescendant(other);
     }
 
+    public static TNode? GetNodeByID<TNode>(Guid id) where TNode : Node
+    {
+        foreach (Node node in GetTree().GetAllNodes())
+        {
+            if (node is TNode tNode && node.ID == id)
+            {
+                return tNode;
+            }
+        }
+        return null;
+    }
+
     public List<Node> GetDescendant()
     {
         List<Node> nodes = [];
@@ -144,6 +156,7 @@ public class Node
         }
         return nodes;
     }
+    #endregion
 
     public override string ToString()
     {
@@ -174,8 +187,13 @@ public class Node
     /// </summary>
     public virtual void Start() { }
 
+    protected virtual void OnDestroy() { }
+
     protected virtual void OnParent(Node? futureParent) { }
 
+    /// <summary>
+    /// Destorys the node and it's descendants by unregistering them.
+    /// </summary>
     public void Destroy()
     {
         Tree tree = GetTree();
@@ -183,9 +201,12 @@ public class Node
         var desendents = GetDescendant();
         foreach (Node node in desendents)
         {
+            node.OnDestroy();
             node.Parent = null;
             tree.UnregisterNode(node);
         }
+        OnDestroy();
+        Parent = null;
         tree.UnregisterNode(this);
     }
 

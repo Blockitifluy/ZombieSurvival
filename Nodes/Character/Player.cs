@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using ZombieSurvival.Engine.NodeSystem;
 using ZombieSurvival.Engine;
-using ZombieSurvival.Engine.NodeSystem.Scene;
 
 namespace ZombieSurvival.Nodes.Character;
 

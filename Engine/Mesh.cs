@@ -1,9 +1,9 @@
 using OpenTK.Graphics.OpenGL4;
-using ZombieSurvival.Engine.NodeSystem.Scene;
+using ZombieSurvival.Engine.NodeSystem;
 
 namespace ZombieSurvival.Engine;
 
-public sealed class Mesh
+public sealed class Mesh : Resource, ICloneable
 {
     /// <summary>
     /// Used in <see cref="GetMeshPrimative"/>.
@@ -113,11 +113,24 @@ public sealed class Mesh
     {
         return primative switch
         {
-            MeshPrimitive.Triangle => TriangleMesh,
-            MeshPrimitive.Quad => QuadMesh,
-            MeshPrimitive.Cube => CubeMesh,
-            _ => throw new NotImplementedException($"Mesh Primative {primative} not implemented"),
+            MeshPrimitive.Triangle => (Mesh)TriangleMesh.Clone(),
+            MeshPrimitive.Quad => (Mesh)QuadMesh.Clone(),
+            MeshPrimitive.Cube => (Mesh)CubeMesh.Clone(),
+            _ => throw new NotImplementedException($"Mesh Primative {primative} is not implemented"),
         };
+    }
+
+    public object Clone()
+    {
+        Mesh mesh = new()
+        {
+            Vertices = (Vector3[])Vertices.Clone(),
+            Indices = (int[])Indices.Clone(),
+            UVs = (Vector2[])UVs.Clone(),
+            PrimitiveType = PrimitiveType
+        };
+
+        return mesh;
     }
 
     /// <summary>
