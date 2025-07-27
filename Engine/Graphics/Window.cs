@@ -71,6 +71,9 @@ public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings 
 
 		GL.BindVertexArray(VertexArrayObject);
 
+		Shader.SetMatrix4("view", CurrentCamera.GetViewMatrix());
+		Shader.SetMatrix4("projection", CurrentCamera.GetProjectionMatrix());
+
 		foreach (Node node in Tree.GetTree().GetAllNodes())
 		{
 			if (node is not MeshContainer container)
@@ -86,7 +89,7 @@ public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings 
 
 			Mesh mesh = container.Mesh;
 
-			float[] feed = mesh.IntoFeed(Vector3.Zero, container.GlobalScale);
+			float[] feed = mesh.IntoFeed();
 
 			GL.BufferData(BufferTarget.ElementArrayBuffer, mesh.Indices.Length * sizeof(uint), mesh.Indices, BufferUsageHint.StaticDraw);
 			GL.BufferData(BufferTarget.ArrayBuffer, feed.Length * sizeof(float), feed, BufferUsageHint.StaticDraw);
@@ -104,12 +107,12 @@ public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings 
 
 			Shader.Use();
 
-			Matrix4 model = Matrix4.CreateTranslation((GLVector3)container.GlobalPosition)
-			* Matrix4.CreateFromQuaternion(container.GlobalQuaternion);
+			Matrix4 model = Matrix4.Identity
+			* Matrix4.CreateFromQuaternion(container.GlobalQuaternion)
+			* Matrix4.CreateScale((GLVector3)container.GlobalScale)
+			* Matrix4.CreateTranslation((GLVector3)container.GlobalPosition);
 
 			Shader.SetMatrix4("model", model);
-			Shader.SetMatrix4("view", CurrentCamera.GetViewMatrix());
-			Shader.SetMatrix4("projection", CurrentCamera.GetProjectionMatrix());
 
 			GL.DrawElements(mesh.PrimitiveType, mesh.Indices.Length, DrawElementsType.UnsignedInt, 0);
 		}

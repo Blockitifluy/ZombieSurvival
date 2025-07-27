@@ -122,11 +122,11 @@ public static partial class SceneHandler
         return [.. exportNodes];
     }
 
-    private static string ExportNodeToString(SaveNodeAttribute saveNode, ExportProp[] exports, Guid localID, Guid parentID)
+    private static string ExportNodeToString(SaveNodeAttribute saveNode, ExportProp[] exports, uint localID, uint parentID)
     {
         StringBuilder builder = new();
 
-        builder.AppendLine($"[{saveNode.SavedName} local-id='{localID.ToString("N")}' parent='{parentID.ToString("N")}']");
+        builder.AppendLine($"[{saveNode.SavedName} local-id='{localID}' parent='{parentID}']");
 
         foreach (ExportProp export in exports)
         {
@@ -135,17 +135,17 @@ public static partial class SceneHandler
         return builder.ToString();
     }
 
-    private static bool TryToGetParentLocalID(Node child, Dictionary<Node, Guid> nodeToID, out Guid id)
+    private static bool TryToGetParentLocalID(Node child, Dictionary<Node, uint> nodeToID, out uint id)
     {
         if (child.Parent is null)
         {
-            id = Guid.Empty;
+            id = 0;
             return false;
         }
 
         if (!nodeToID.TryGetValue(child.Parent, out var _id))
         {
-            id = Guid.Empty;
+            id = 0;
             Console.WriteLine("Child couldn't parent's ID (are you sure you sorting correctly?)");
             return false;
         }
@@ -170,9 +170,12 @@ public static partial class SceneHandler
 
         nodes.Sort((x, y) => x.GetAncestors().Count - y.GetAncestors().Count);
 
-        Dictionary<Node, Guid> nodeToLocalID = [];
+        uint i = 0;
+
+        Dictionary<Node, uint> nodeToLocalID = [];
         foreach (Node node in nodes)
         {
+            i++;
             var saveNode = node.GetType().GetCustomAttribute<SaveNodeAttribute>(false);
 
             if (saveNode is null)
@@ -187,11 +190,10 @@ public static partial class SceneHandler
 
             bool hasParent = TryToGetParentLocalID(node, nodeToLocalID, out var parentID);
 
-            Guid localID = Guid.NewGuid();
             ExportProp[] exports = GetExportPropetries(node);
 
-            nodeToLocalID.Add(node, localID);
-            string exportText = ExportNodeToString(saveNode, exports, localID, parentID);
+            nodeToLocalID.Add(node, i);
+            string exportText = ExportNodeToString(saveNode, exports, i, parentID);
 
             byte[] bytes = Encoding.UTF8.GetBytes(exportText);
 
@@ -210,7 +212,7 @@ public static partial class SceneHandler
     #endregion
 
     #region Loading Scene
-    // TODO - Add resource support
+
     private struct ImportProp
     {
         public required string Key;
@@ -227,8 +229,8 @@ public static partial class SceneHandler
     private struct ImportNode
     {
         public required string NodeType;
-        public required Guid ParentID;
-        public required Guid LocalID;
+        public required uint ParentID;
+        public required uint LocalID;
         public List<ImportProp> Propetries = [];
 
         public override readonly string ToString()
@@ -247,8 +249,8 @@ public static partial class SceneHandler
         local = groups[2].Value,
         parent = groups[3].Value;
 
-        bool canParseLocal = Guid.TryParse(local, out var localID),
-        canParseParent = Guid.TryParse(parent, out var parentID);
+        bool canParseLocal = uint.TryParse(local, out var localID),
+        canParseParent = uint.TryParse(parent, out var parentID);
         if (!canParseLocal || !canParseParent)
         {
             throw new MalformedSceneException("Couldn't parse either (or both) local or parent!");
@@ -292,7 +294,7 @@ public static partial class SceneHandler
     {
         List<ImportNode> importNodes = [];
 
-        int i = 0;
+        uint i = 0;
 
         while (sceneStream.Peek() >= 0)
         {
@@ -368,9 +370,9 @@ public static partial class SceneHandler
         }
     }
 
-    private static Dictionary<Guid, Node> LoadNodesFromImport(List<ImportNode> importNodes)
+    private static Dictionary<uint, Node> LoadNodesFromImport(List<ImportNode> importNodes)
     {
-        Dictionary<Guid, Node> IDToNode = [];
+        Dictionary<uint, Node> IDToNode = [];
 
         foreach (ImportNode import in importNodes)
         {
@@ -378,7 +380,7 @@ public static partial class SceneHandler
             Node? node = (Node?)Activator.CreateInstance(nodeType);
             LoadingNodeException.ThrowIfNull(node, "Node couldn't be constructed (has no parameterless contructor)");
 
-            if (import.ParentID != Guid.Empty) // Node has a parent
+            if (import.ParentID != 0) // Node has a parent
             {
                 Node parentNode = IDToNode[import.ParentID];
                 node.Parent = parentNode;
@@ -406,7 +408,7 @@ public static partial class SceneHandler
 
         List<ImportNode> importNodes = ParseSceneFile(sceneStream);
 
-        Dictionary<Guid, Node> IDToNode = LoadNodesFromImport(importNodes);
+        Dictionary<uint, Node> IDToNode = LoadNodesFromImport(importNodes);
 
         foreach (Node node in IDToNode.Values)
         {
@@ -421,7 +423,7 @@ public static partial class SceneHandler
         Console.WriteLine($"Loading Scene taken {(double)msTaken / 1000} seconds");
     }
 
-    const string NodeRegex = @"^\[(.+?) local-id='([\w\d]{32})' parent='([\w\d]{32})'\]$";
+    const string NodeRegex = @"^\[(.+?) local-id='(\d+?)' parent='(\d+?)'\]$";
 
     [GeneratedRegex(NodeRegex)]
     private static partial Regex RegexNode();

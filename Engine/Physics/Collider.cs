@@ -7,15 +7,19 @@ namespace ZombieSurvival.Engine.Physics;
 /// </summary>
 public abstract class CollisionShape
 {
-    public const float CollisionVoxelSize = 0.1f;
-
-    public bool[] CollisonVoxels = [];
+    public bool[,,] CollisonVoxels = new bool[0, 0, 0];
 
     public abstract Vector3 Bounds { get; }
 
     public Vector3 Position;
     public Vector3 Rotation;
     public Vector3 Scale = Vector3.One;
+
+    public abstract void CalculateCollisionVoxels();
+
+    public delegate void ForVoxel(Vector3Int pos, bool voxel);
+
+    public abstract void ForEachVoxel(ForVoxel func);
 
     /// <summary>
     /// Checks if two Collider Shapes' bounds are intersecting. 
@@ -30,7 +34,12 @@ public abstract class CollisionShape
             CollisionShape shape0 = cube == 0 ? first : second,
             shape1 = cube == 0 ? second : first;
 
-            Vector3 pos0 = shape0.Position,
+            Vector3 rotationDiff = shape0.Rotation - shape1.Rotation,
+            diffUnit = rotationDiff.Unit == Vector3.Zero ? Vector3.Zero : rotationDiff.Unit;
+
+            float angle = float.DegreesToRadians(rotationDiff.Magnitude);
+
+            Vector3 pos0 = Vector3.Rotate(shape0.Position - shape1.Position, diffUnit, angle) + shape1.Position,
             pos1 = shape1.Position,
             bounds0 = (shape0.Scale * shape0.Bounds) + pos0,
             bounds1 = (shape1.Scale * shape1.Bounds) + pos1;
@@ -47,17 +56,70 @@ public abstract class CollisionShape
         return false;
     }
 
-    // TODO
     public static bool IsColliding(CollisionShape first, CollisionShape second)
     {
-        throw new NotImplementedException();
+        bool inBounds = IsCollidingInBounds(first, second);
+
+        if (!inBounds)
+        {
+            return false;
+        }
+        Vector3 rotationDiff = second.Rotation - first.Rotation,
+        diffUnit = rotationDiff.Unit == Vector3.Zero ? Vector3.Zero : rotationDiff.Unit;
+
+        float angle = float.DegreesToRadians(rotationDiff.Magnitude);
+
+        Vector3Int pos = (Vector3Int)(Vector3.Rotate(first.Position - second.Position, diffUnit, angle) + second.Position);
+
+        bool isColliding = false;
+
+        first.ForEachVoxel((pos0, voxel0) =>
+        {
+            if (!voxel0)
+            {
+                return;
+            }
+
+            Vector3Int localPos = pos0;
+
+            bool inX = 0 <= localPos.X && localPos.X < second.CollisonVoxels.GetLength(0),
+            inY = 0 <= localPos.Y && localPos.Y < second.CollisonVoxels.GetLength(1),
+            inZ = 0 <= localPos.Z && localPos.Z < second.CollisonVoxels.GetLength(2);
+
+            if (!inX || !inY || !inZ)
+            {
+                return;
+            }
+
+            bool other = second.CollisonVoxels[localPos.X, localPos.Y, localPos.Z];
+
+            isColliding = other;
+        });
+
+        return isColliding;
+    }
+
+    public bool IsPointColliding(Vector3 point)
+    {
+        Vector3 diffUnit = Rotation.Unit == Vector3.Zero ? Vector3.Zero : Rotation.Unit;
+
+        float angle = float.DegreesToRadians(Rotation.Magnitude);
+
+        Vector3 pos = Rotation == Vector3.Zero ? Position : Vector3.Rotate(point - Position, diffUnit, -angle),
+            bounds = (Scale * Bounds) + point;
+
+        bool inX = pos.X <= point.X && point.X <= bounds.X,
+            inY = pos.Y <= point.Y && point.Y <= bounds.Y,
+            inZ = pos.Z <= point.Z && point.Z <= bounds.Z;
+
+        return inX && inY && inZ;
     }
 }
 
 [SaveNode("engine.collider")]
 public sealed class Collider : Node3D
 {
-    static private readonly List<Collider> Colliders = [];
+    static public readonly List<Collider> Colliders = [];
 
     private CollisionShape? _CollisionShape;
     [Export]
@@ -77,7 +139,8 @@ public sealed class Collider : Node3D
         shape.Scale = GlobalScale;
         shape.Position = GlobalPosition;
 
-        _CollisionShape = shape;
+        CollisionShape = shape;
+        shape.CalculateCollisionVoxels();
     }
 
     protected override void UpdateTransformations()
@@ -92,9 +155,18 @@ public sealed class Collider : Node3D
         }
     }
 
+    protected override void OnNonPositionUpdate()
+    {
+        base.OnNonPositionUpdate();
+
+        CollisionShape?.CalculateCollisionVoxels();
+    }
+
     public override void Awake()
     {
         base.Awake();
+
+        CollisionShape?.CalculateCollisionVoxels();
 
         Colliders.Add(this);
     }
@@ -115,7 +187,7 @@ public sealed class Collider : Node3D
                 continue;
             }
 
-            bool inBounds = CollisionShape.IsCollidingInBounds(CollisionShape, other.CollisionShape);
+            bool inBounds = CollisionShape.IsColliding(CollisionShape, other.CollisionShape);
 
             if (inBounds)
             {

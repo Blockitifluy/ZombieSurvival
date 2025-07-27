@@ -52,7 +52,7 @@ e.g.
 
 ```scene
 // Node
-[engine.camera local-id='eb73e2cfc53b45aca89fed0ecc236166' parent='00000000000000000000000000000000']
+[engine.camera local-id='1' parent='0']
 // Properties of Node
 	ZombieSurvival.Engine.Vector3 Position={"X":0,"Y":0,"Z":0}
 	ZombieSurvival.Engine.Vector3 Rotation={"X":0,"Y":0,"Z":0}
@@ -73,14 +73,14 @@ Node declearation properties should be as follows:
 Local id's should be unique and should not be duplicate in multiple Node declearations. For example:
 
 ```scene
-[engine.node local-id"guid-here" parent="parent"] // fine
-[engine.node local-id"guid-here" parent="parent"] // results in error, or unknown behaviour
+[engine.node local-id"1" parent="parent"] // fine
+[engine.node local-id"1" parent="parent"] // results in error, or unknown behaviour
 ```
 
-### No parent is 32 0s
+### No parent is a 0
 
 To declear that node is parented to tree, add 32 0s.
 
 ```scene
-[engine.node local-id"guid-here" parent="00000000000000000000000000000000"]
+[engine.node local-id"1" parent="0"]
 ```

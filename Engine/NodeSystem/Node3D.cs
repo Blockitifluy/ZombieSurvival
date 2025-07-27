@@ -34,6 +34,7 @@ public class Node3D : Node
             _Rotation = value;
             UpdateVectors();
             UpdateTransformations();
+            OnNonPositionUpdate();
         }
     }
     [Export]
@@ -44,6 +45,7 @@ public class Node3D : Node
         {
             _Scale = value;
             UpdateTransformations();
+            OnNonPositionUpdate();
         }
     }
     public Quaternion Quaternion => _Quaternion;
@@ -87,6 +89,8 @@ public class Node3D : Node
             node3D.UpdateTransformations();
         }
     }
+
+    protected virtual void OnNonPositionUpdate() { }
 
     protected virtual void UpdateTransformations()
     {
