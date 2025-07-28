@@ -139,9 +139,9 @@ public class Node3D : Node
         yaw = Rotation.X;
 
         // First, the front matrix is calculated using some basic trigonometry.
-        _Front.X = MathF.Cos(pitch) * MathF.Cos(yaw);
-        _Front.Y = MathF.Sin(pitch);
-        _Front.Z = MathF.Cos(pitch) * MathF.Sin(yaw);
+        _Front.X = float.Cos(pitch) * float.Cos(yaw);
+        _Front.Y = float.Sin(pitch);
+        _Front.Z = float.Cos(pitch) * float.Sin(yaw);
 
         // We need to make sure the vectors are all normalized, as otherwise we would get some funky results.
         _Front = _Front.Unit;

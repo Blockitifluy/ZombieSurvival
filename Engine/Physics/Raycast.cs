@@ -2,9 +2,18 @@ using ZombieSurvival.Engine.NodeSystem;
 
 namespace ZombieSurvival.Engine.Physics;
 
+/// <summary>
+/// The result of a raycast being fired.
+/// </summary>
 public struct RaycastResult
 {
+    /// <summary>
+    /// The collider hit.
+    /// </summary>
     public required Collider Target;
+    /// <summary>
+    /// On where the ray hit on the collider.
+    /// </summary>
     public required Vector3 Hit;
 
     public override readonly string ToString()
@@ -13,15 +22,50 @@ public struct RaycastResult
     }
 }
 
-public static partial class Physics
+/// <summary>
+/// Contains information about a ray.
+/// </summary>
+/// <param name="origin"><inheritdoc cref="Origin" path="/summary"/></param>
+/// <param name="dir"><inheritdoc cref="Direction" path="/summary"/></param>
+public struct Ray(Vector3 origin, Vector3 dir)
 {
-    public const float CollisionVoxelSize = 0.1f;
-
     public enum RaycastFilter
     {
         Include,
         Exclude
     }
+
+    /// <summary>
+    /// The starting point of the ray.
+    /// </summary>
+    public Vector3 Origin = origin;
+    /// <summary name="dir">
+    /// The direction of the ray (Magnitude means range of ray).
+    /// </summary>
+    public Vector3 Direction = dir;
+
+    /// <summary>
+    /// Controls how the <see cref="FilterList"/> behaves.
+    /// </summary>
+    public RaycastFilter FilterType = RaycastFilter.Exclude;
+    /// <summary>
+    /// The nodes and it's desendants that are included/excluded depending on <see cref="FilterType"/>.
+    /// </summary>
+    public Node[] FilterList = [];
+
+    public override readonly string ToString()
+    {
+        return $"Ray origin {Origin} direction {Direction}";
+    }
+}
+
+
+public static partial class Physics
+{
+    /// <summary>
+    /// How big are voxels for collidision.
+    /// </summary>
+    public const float CollisionVoxelSize = 0.2f;
 
     private static bool IsIn180Sight(Vector3 origin, Vector3 direction, Collider collider)
     {
@@ -43,35 +87,41 @@ public static partial class Physics
         return false;
     }
 
-    private static bool IncludedInFilter(Collider collider, List<Node> filterList, RaycastFilter filter)
+    private static bool IncludedInFilter(Collider collider, Node[] filterList, Ray.RaycastFilter filter)
     {
         foreach (Node node in filterList)
         {
             bool isDescendant = node.IsDescendant(collider) || node == collider;
-            if (isDescendant && filter == RaycastFilter.Include)
+            if (isDescendant && filter == Ray.RaycastFilter.Include)
             {
                 return true;
             }
         }
 
-        return filter == RaycastFilter.Exclude;
+        return filter == Ray.RaycastFilter.Exclude;
     }
 
-    public static RaycastResult[] RaycastList(Vector3 origin, Vector3 direction, List<Node> filterList, RaycastFilter filter = RaycastFilter.Exclude)
+    /// <summary>
+    /// Gets all objects that have collided with a ray.
+    /// </summary>
+    /// <param name="ray">The ray object</param>
+    /// <returns>The array of objects hit by the ray (from closest to farthest).</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Direction is zero</exception>
+    public static RaycastResult[] RaycastList(Ray ray)
     {
         List<Collider> colliders = Collider.Colliders;
         List<RaycastResult> hitTarget = [];
 
-        Vector3Int intOrigin = (Vector3Int)origin;
+        Vector3Int intOrigin = (Vector3Int)ray.Origin;
 
-        if (direction.X == 0 && direction.Y == 0 && direction.Z == 0)
+        if (ray.Direction.X == 0 && ray.Direction.Y == 0 && ray.Direction.Z == 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(direction), "Raycast in zero direction");
+            throw new ArgumentOutOfRangeException(nameof(ray), "Raycast in zero direction");
         }
 
         foreach (Collider collider in colliders)
         {
-            if (!IncludedInFilter(collider, filterList, filter))
+            if (!IncludedInFilter(collider, ray.FilterList, ray.FilterType))
             {
                 continue;
             }
@@ -79,7 +129,7 @@ public static partial class Physics
             Vector3 pos = collider.GlobalPosition,
             scale = collider.GlobalScale;
 
-            bool inSight = IsIn180Sight(origin, direction, collider);
+            bool inSight = IsIn180Sight(ray.Origin, ray.Direction, collider);
             if (!inSight)
             {
                 continue;
@@ -96,12 +146,11 @@ public static partial class Physics
 
             bool enteredOnce = false;
 
-            Console.WriteLine(collider);
-            while (globalStep.Magnitude < direction.Magnitude)
+            while (globalStep.Magnitude < ray.Direction.Magnitude)
             {
-                Console.WriteLine("step");
-                globalStep += direction.Unit * CollisionVoxelSize;
-                bool isInside = shape.IsPointColliding(globalStep + origin);
+                globalStep += ray.Direction.Unit * CollisionVoxelSize;
+                step += ray.Direction.Unit;
+                bool isInside = shape.IsPointCollidingInBounds(globalStep + ray.Origin);
                 if (!isInside)
                 {
                     if (enteredOnce)
@@ -111,26 +160,15 @@ public static partial class Physics
                     continue;
                 }
 
-                step += direction.Unit;
-
                 enteredOnce = true;
 
-                Vector3Int intStep = new(
-                    (int)MathF.Abs(step.X),
-                    (int)MathF.Abs(step.Y),
-                    (int)MathF.Abs(step.Z)
-                );
-                Console.WriteLine(intStep);
-                Console.WriteLine(globalStep);
-                Console.WriteLine(step);
-                Console.WriteLine("\n");
+                bool isColliding = shape.IsPointColliding(globalStep + ray.Origin);
 
-                bool colliding = shape.CollisonVoxels[intStep.X, intStep.Y, intStep.Z];
-                if (colliding)
+                if (isColliding)
                 {
                     hitTarget.Add(new()
                     {
-                        Hit = collider.GlobalPosition - globalStep,
+                        Hit = ray.Origin + globalStep,
                         Target = collider
                     });
                     break;
@@ -143,9 +181,15 @@ public static partial class Physics
         return [.. hitTarget];
     }
 
-    public static RaycastResult? Raycast(Vector3 origin, Vector3 direction, List<Node> ignoreList, RaycastFilter ignore)
+    /// <summary>
+    /// Gets the first object that has collided with a ray.
+    /// </summary>
+    /// <param name="ray">The ray object</param>
+    /// <exception cref="ArgumentOutOfRangeException">Direction is zero</exception>
+    /// <returns>The first object hit</returns>
+    public static RaycastResult? Raycast(Ray ray)
     {
-        var rays = RaycastList(origin, direction, ignoreList, ignore);
+        var rays = RaycastList(ray);
 
         if (rays.Length == 0)
         {
@@ -155,14 +199,55 @@ public static partial class Physics
         return rays[0];
     }
 
+    /// <inheritdoc cref="RaycastList(Ray)"/>
+    /// <param name="origin"><inheritdoc cref="Ray.Origin" path="/summary"/></param>
+    /// <param name="direction"><inheritdoc cref="Ray.Direction" path="/summary"/></param>
+    /// <param name="filterList"><inheritdoc cref="Ray.FilterList" path="/summary"/></param>
+    /// <param name="filterType"><inheritdoc cref="Ray.FilterType" path="/summary"/></param>
+    public static RaycastResult[] RaycastList(Vector3 origin, Vector3 direction, IEnumerable<Node> filterList, Ray.RaycastFilter filterType = Ray.RaycastFilter.Exclude)
+    {
+        Ray ray = new(origin, direction)
+        {
+            FilterType = filterType,
+            FilterList = [.. filterList]
+        };
+
+        return RaycastList(ray);
+    }
+
+    /// <inheritdoc cref="Raycast(Ray)"/>
+    /// <param name="origin"><inheritdoc cref="Ray.Origin" path="/summary"/></param>
+    /// <param name="direction"><inheritdoc cref="Ray.Direction" path="/summary"/></param>
+    /// <param name="filterList"><inheritdoc cref="Ray.FilterList" path="/summary"/></param>
+    /// <param name="filterType"><inheritdoc cref="Ray.FilterType" path="/summary"/></param>
+    public static RaycastResult? Raycast(Vector3 origin, Vector3 direction, IEnumerable<Node> filterList, Ray.RaycastFilter filterType = Ray.RaycastFilter.Exclude)
+    {
+        Ray ray = new(origin, direction)
+        {
+            FilterType = filterType,
+            FilterList = [.. filterList]
+        };
+
+        return Raycast(ray);
+    }
+
+    /// <summary>
+    /// Gets all of the corners of a collider.
+    /// </summary>
+    /// <param name="collider">The collider</param>
+    /// <returns>All of the corners (acounting for transformations).</returns>
     public static Vector3[] GetCornersOfCollider(Collider collider)
     {
+        CollisionShape? shape = collider.CollisionShape;
+
+        ArgumentNullException.ThrowIfNull(shape, nameof(shape));
+
         Vector3 pos = collider.GlobalPosition,
-        scale = collider.GlobalScale,
+        scale = collider.GlobalScale * shape.Bounds,
         rot = collider.GlobalRotation;
 
         Vector3[] local = [
-            pos, // Bottom Left Back
+            Vector3.Zero, // Bottom Left Back
             Vector3.Up * scale, // Top Left Back
 
             Vector3.Right * scale, // Bottom Right Back
@@ -180,9 +265,7 @@ public static partial class Physics
         int i = 0;
         foreach (Vector3 crn in local)
         {
-            float angle = float.DegreesToRadians(rot.Magnitude);
-
-            corners[i] = pos + Vector3.Rotate(crn, rot.Unit, angle);
+            corners[i] = pos + Vector3.RotateEuler(crn, rot);
             i++;
         }
 

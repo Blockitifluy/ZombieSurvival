@@ -29,7 +29,7 @@ public class Mover : Node3D
 
         float remainingDist = (To - Position).Magnitude,
         plannedDist = (float)delta * Speed;
-        float distance = MathF.Min(plannedDist, remainingDist);
+        float distance = float.Min(plannedDist, remainingDist);
 
         Position += dir * distance;
 

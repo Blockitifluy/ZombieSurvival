@@ -11,6 +11,7 @@ using ZombieSurvival.Nodes.Character;
 namespace ZombieSurvival;
 
 // TODO - Write Tests
+// TODO - Text Rendering
 // TODO - Convert Mesh file to mesh obj
 
 public static class Program

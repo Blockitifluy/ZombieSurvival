@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using ZombieSurvival.Engine.NodeSystem;
 
 namespace ZombieSurvival.Engine.Physics;
@@ -7,8 +8,12 @@ namespace ZombieSurvival.Engine.Physics;
 /// </summary>
 public abstract class CollisionShape
 {
+    /// <summary>
+    /// All of the voxels of the Collision Shape
+    /// </summary>
     public bool[,,] CollisonVoxels = new bool[0, 0, 0];
 
+    [JsonIgnore]
     public abstract Vector3 Bounds { get; }
 
     public Vector3 Position;
@@ -17,12 +22,48 @@ public abstract class CollisionShape
 
     public abstract void CalculateCollisionVoxels();
 
-    public delegate void ForVoxel(Vector3Int pos, bool voxel);
-
-    public abstract void ForEachVoxel(ForVoxel func);
+    public delegate bool ForVoxel(Vector3Int pos, bool voxel);
 
     /// <summary>
-    /// Checks if two Collider Shapes' bounds are intersecting. 
+    /// Loops over every voxel, firing <paramref name="func"/>.
+    /// </summary>
+    /// <param name="func">Delegate to be fired every voxel.</param>
+    public void ForEachVoxel(ForVoxel func)
+    {
+        Vector3Int voxelSize = GetVoxelsPerDimension();
+        bool stop = false;
+
+        for (int x = 0; x < voxelSize.X; x++)
+        {
+            for (int y = 0; y < voxelSize.Y; y++)
+            {
+                for (int z = 0; z < voxelSize.Z; z++)
+                {
+                    Vector3Int pos = new(x, y, z);
+
+                    stop = func(pos, CollisonVoxels[x, y, z]);
+                }
+
+                if (stop)
+                {
+                    break;
+                }
+            }
+
+            if (stop)
+            {
+                break;
+            }
+        }
+    }
+
+    public Vector3Int GetVoxelsPerDimension()
+    {
+        return (Vector3Int)(Bounds * Scale / Physics.CollisionVoxelSize);
+    }
+
+    /// <summary>
+    /// Checks if two Collision Shapes' bounds are intersecting. 
     /// </summary>
     /// <param name="first">The first collision shape.</param>
     /// <param name="second">The second collision shape.</param>
@@ -34,20 +75,16 @@ public abstract class CollisionShape
             CollisionShape shape0 = cube == 0 ? first : second,
             shape1 = cube == 0 ? second : first;
 
-            Vector3 rotationDiff = shape0.Rotation - shape1.Rotation,
-            diffUnit = rotationDiff.Unit == Vector3.Zero ? Vector3.Zero : rotationDiff.Unit;
+            Vector3 rotDiff = shape0.Rotation - shape1.Rotation;
 
-            float angle = float.DegreesToRadians(rotationDiff.Magnitude);
-
-            Vector3 pos0 = Vector3.Rotate(shape0.Position - shape1.Position, diffUnit, angle) + shape1.Position,
+            Vector3 pos0 = Vector3.RotateEuler(shape0.Position - shape1.Position, rotDiff) + shape1.Position,
             pos1 = shape1.Position,
             bounds0 = (shape0.Scale * shape0.Bounds) + pos0,
             bounds1 = (shape1.Scale * shape1.Bounds) + pos1;
 
-            bool inX = (pos1.X <= pos0.X && pos0.X <= bounds1.X) || (pos1.X <= bounds0.X && bounds0.X <= bounds1.X),
-            inY = (pos1.Y <= pos0.Y && pos0.Y <= bounds1.Y) || (pos1.Y <= bounds0.Y && bounds0.Y <= bounds1.Y),
-            inZ = (pos1.Z <= pos0.Z && pos0.Z <= bounds1.Z) || (pos1.Z <= bounds0.Z && bounds0.Z <= bounds1.Z);
-            if (inX && inY && inZ)
+            bool inside = Physics.InPointInside(pos0, pos1, bounds1) || Physics.InPointInside(bounds0, pos1, bounds1);
+
+            if (inside)
             {
                 return true;
             }
@@ -56,6 +93,15 @@ public abstract class CollisionShape
         return false;
     }
 
+    /// <summary>
+    /// Checks if two Collision Shapes are inside or colliding.
+    /// </summary>
+    /// <remarks>
+    /// More presice than <see cref="IsCollidingInBounds"/>.
+    /// </remarks>
+    /// <param name="first">The first collision shape.</param>
+    /// <param name="second">The second collision shape.</param>
+    /// <returns>True, if two collision shapes are intersection.</returns>
     public static bool IsColliding(CollisionShape first, CollisionShape second)
     {
         bool inBounds = IsCollidingInBounds(first, second);
@@ -64,12 +110,9 @@ public abstract class CollisionShape
         {
             return false;
         }
-        Vector3 rotationDiff = second.Rotation - first.Rotation,
-        diffUnit = rotationDiff.Unit == Vector3.Zero ? Vector3.Zero : rotationDiff.Unit;
+        Vector3 rotDiff = second.Rotation - first.Rotation;
 
-        float angle = float.DegreesToRadians(rotationDiff.Magnitude);
-
-        Vector3Int pos = (Vector3Int)(Vector3.Rotate(first.Position - second.Position, diffUnit, angle) + second.Position);
+        Vector3Int pos = (Vector3Int)(Vector3.RotateEuler(first.Position - second.Position, rotDiff) + second.Position);
 
         bool isColliding = false;
 
@@ -77,42 +120,70 @@ public abstract class CollisionShape
         {
             if (!voxel0)
             {
-                return;
+                return false;
             }
 
             Vector3Int localPos = pos0;
 
-            bool inX = 0 <= localPos.X && localPos.X < second.CollisonVoxels.GetLength(0),
-            inY = 0 <= localPos.Y && localPos.Y < second.CollisonVoxels.GetLength(1),
-            inZ = 0 <= localPos.Z && localPos.Z < second.CollisonVoxels.GetLength(2);
+            bool inside = Physics.InPointInside(localPos, second.GetVoxelsPerDimension());
 
-            if (!inX || !inY || !inZ)
+            if (!inside)
             {
-                return;
+                return false;
             }
 
             bool other = second.CollisonVoxels[localPos.X, localPos.Y, localPos.Z];
 
-            isColliding = other;
+            if (other)
+            {
+                isColliding = true;
+                return true;
+            }
+
+            return false;
         });
 
         return isColliding;
     }
 
-    public bool IsPointColliding(Vector3 point)
+    /// <summary>
+    /// Checks if a point is intersecting with the collider.
+    /// </summary>
+    /// <param name="point">A point</param>
+    /// <returns>True, if a point is intersecting.</returns>
+    public bool IsPointCollidingInBounds(Vector3 point)
     {
-        Vector3 diffUnit = Rotation.Unit == Vector3.Zero ? Vector3.Zero : Rotation.Unit;
-
-        float angle = float.DegreesToRadians(Rotation.Magnitude);
-
-        Vector3 pos = Rotation == Vector3.Zero ? Position : Vector3.Rotate(point - Position, diffUnit, -angle),
+        Vector3 pos = Vector3.RotateEuler(point - Position, Rotation),
             bounds = (Scale * Bounds) + point;
 
-        bool inX = pos.X <= point.X && point.X <= bounds.X,
-            inY = pos.Y <= point.Y && point.Y <= bounds.Y,
-            inZ = pos.Z <= point.Z && point.Z <= bounds.Z;
+        return Physics.InPointInside(point, pos, bounds);
+    }
 
-        return inX && inY && inZ;
+    /// <summary>
+    /// Checks if a point is inside or colliding with Collision Shapes.
+    /// </summary>
+    /// <param name="point">A point</param>
+    /// <returns>True, if a point is inside or colliding.</returns>
+    public bool IsPointColliding(Vector3 point)
+    {
+        Vector3 pos = point - Position;
+
+        Vector3Int intStep = new(
+            (int)pos.X,
+            (int)pos.Y,
+            (int)pos.Z
+        );
+
+        Vector3Int voxelDimension = GetVoxelsPerDimension();
+
+        if (!Physics.InPointInside(intStep, voxelDimension))
+        {
+            return false;
+        }
+
+        bool colliding = CollisonVoxels[intStep.X, intStep.Y, intStep.Z];
+
+        return colliding;
     }
 }
 

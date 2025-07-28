@@ -126,6 +126,14 @@ public struct Vector3(float x = 0, float y = 0, float z = 0)
         return base.GetHashCode();
     }
 
+    public static Vector3 RotateEuler(Vector3 point, Vector3 euler)
+    {
+        Vector3 dir = euler.Unit;
+        float angle = float.DegreesToRadians(euler.Magnitude);
+
+        return Rotate(point, dir, angle);
+    }
+
     public static Vector3 Rotate(Vector3 point, Vector3 axis, float angle)
     {
         if (axis == Zero || angle == 0)
@@ -218,7 +226,7 @@ public struct Vector3(float x = 0, float y = 0, float z = 0)
     [JsonIgnore]
     public readonly float Magnitude
     {
-        get { return MathF.Sqrt(X * X + Y * Y + Z * Z); }
+        get { return float.Sqrt(X * X + Y * Y + Z * Z); }
     }
 
     [JsonIgnore]
@@ -392,7 +400,7 @@ public struct Vector3Int(int x = 0, int y = 0, int z = 0)
     [JsonIgnore]
     public readonly float Magnitude
     {
-        get { return MathF.Sqrt(X * X + Y * Y + Z * Z); }
+        get { return float.Sqrt(X * X + Y * Y + Z * Z); }
     }
 
     [JsonIgnore]
@@ -538,7 +546,7 @@ public struct Vector2Int(int x = 0, int y = 0)
     [JsonIgnore]
     public readonly float Magnitude
     {
-        get { return MathF.Sqrt(X * X + Y * Y); }
+        get { return float.Sqrt(X * X + Y * Y); }
     }
 
     [JsonIgnore]
@@ -684,7 +692,7 @@ public struct Vector2(float x = 0, float y = 0)
     [JsonIgnore]
     public readonly float Magnitude
     {
-        get { return MathF.Sqrt(X * X + Y * Y); }
+        get { return float.Sqrt(X * X + Y * Y); }
     }
 
     [JsonIgnore]

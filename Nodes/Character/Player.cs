@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using ZombieSurvival.Engine.NodeSystem;
 using ZombieSurvival.Engine;
+using ZombieSurvival.Engine.Physics;
 
 namespace ZombieSurvival.Nodes.Character;
 
@@ -19,11 +20,9 @@ public class Player : Character
     private bool FirstMove = true;
     private Vector2 LastPos;
 
-    public override void Update(double delta)
+    private void MoveCamera(float delta)
     {
-        base.Update(delta);
-
-        float fDelta = (float)delta,
+        float fDelta = delta,
         time = fDelta * 4;
 
         Vector3 xMovement = Camera.Right * Input.InputAxis(Keys.A, Keys.D)
@@ -54,6 +53,24 @@ public class Player : Character
         }
     }
 
+    public override void Update(double delta)
+    {
+        base.Update(delta);
+
+        MoveCamera((float)delta);
+
+        Ray ray = new(Camera.GlobalPosition, Camera.Front)
+        {
+            FilterList = [this]
+        };
+
+        RaycastResult? result = Physics.Raycast(ray);
+
+        if (result.HasValue)
+        {
+            Console.WriteLine(result.Value);
+        }
+    }
     public override void Awake()
     {
         base.Awake();
