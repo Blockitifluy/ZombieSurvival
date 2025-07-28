@@ -84,3 +84,17 @@ To declear that node is parented to tree, add 32 0s.
 ```scene
 [engine.node local-id"1" parent="0"]
 ```
+
+# Meshes
+
+To convert a .obj to a mesh usable in the Engine.
+
+1. Export the mesh as an .obj ![In blender, File/Export/Wavefront (.obj)](/docs/export-mesh-example.png).
+
+2. Use the command:
+
+```bat
+py tools/mesh_converter.py [obj-file-here] [export-file-here]
+```
+
+To be noted, the script only supports .obj files and is surport to handle one object.
