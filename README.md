@@ -38,9 +38,6 @@ When recieving an error, do the same steps in the [Loading Demo Scene](#loading-
 
 ## Scene Formating
 
-> [!WARNING]
-> Comments in scene files are not supported yet.
-
 > [!NOTE]
 > Editing a file scene directly is not suggested
 
@@ -51,9 +48,9 @@ A node declearation should be the first thing in scene, with all of the properti
 e.g.
 
 ```scene
-// Node
+# Node
 [engine.camera local-id='1' parent='0']
-// Properties of Node
+	# Properties of Node
 	ZombieSurvival.Engine.Vector3 Position={"X":0,"Y":0,"Z":0}
 	ZombieSurvival.Engine.Vector3 Rotation={"X":0,"Y":0,"Z":0}
 	ZombieSurvival.Engine.Vector3 Scale={"X":1,"Y":1,"Z":1}
@@ -73,8 +70,10 @@ Node declearation properties should be as follows:
 Local id's should be unique and should not be duplicate in multiple Node declearations. For example:
 
 ```scene
-[engine.node local-id"1" parent="parent"] // fine
-[engine.node local-id"1" parent="parent"] // results in error, or unknown behaviour
+# fine
+[engine.node local-id"1" parent="parent"]
+# results in error, or unknown behaviour
+[engine.node local-id"1" parent="parent"]
 ```
 
 ### No parent is a 0

@@ -307,35 +307,40 @@ public static partial class SceneHandler
             line = line.Trim();
 
             Match nodeMatch = RegexNode().Match(line),
-            propMatch = RegexProp().Match(line);
+            propMatch = RegexProp().Match(line),
+            commentMatch = RegexComment().Match(line);
 
-            if (nodeMatch.Success)
+            try
             {
-                try
+                if (nodeMatch.Success)
                 {
                     ImportNode importNode = ParseImportNode(nodeMatch);
 
                     importNodes.Add(importNode);
                 }
-                catch (Exception)
+                else if (propMatch.Success)
                 {
-                    Console.WriteLine($"Error thrown on line {i}");
-                    throw;
-                }
-            }
-            else if (propMatch.Success)
-            {
-                if (importNodes.Count <= 0)
-                {
-                    throw new MalformedSceneException("Property appeared before first node");
-                }
-                ImportProp importProp = ParseImportProp(propMatch);
+                    if (importNodes.Count <= 0)
+                    {
+                        throw new MalformedSceneException("Property appeared before first node");
+                    }
+                    ImportProp importProp = ParseImportProp(propMatch);
 
-                importNodes[^1].Propetries.Add(importProp);
+                    importNodes[^1].Propetries.Add(importProp);
+                }
+                else if (commentMatch.Success)
+                {
+                    continue;
+                }
+                else
+                {
+                    throw new MalformedSceneException($"Line {i} is not a property or node!");
+                }
             }
-            else
+            catch (Exception)
             {
-                throw new MalformedSceneException($"Line {i} is not a property or node!");
+                Console.WriteLine($"Error thrown on line {i}");
+                throw;
             }
         }
 
@@ -432,6 +437,11 @@ public static partial class SceneHandler
 
     [GeneratedRegex(PropRegex)]
     private static partial Regex RegexProp();
+
+    const string CommentRegex = @"^\s*#.*$";
+
+    [GeneratedRegex(CommentRegex)]
+    private static partial Regex RegexComment();
     #endregion
 
     private static readonly Dictionary<string, Type> NodeNameToType = [];
