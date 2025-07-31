@@ -61,14 +61,14 @@ public sealed class Mesh : Resource, ICloneable
     private static readonly Mesh CubeMesh = new()
     {
         Vertices = [
-            new(0, 0, 1), //0
-            new(1, 0, 1), //1
-            new(0, 1, 1), //2
+            new(-1, -1, 1), //0
+            new(1, -1, 1), //1
+            new(-1, 1, 1), //2
             new(1, 1, 1), //3
-            new(0, 0, 0), //4
-            new(1, 0, 0), //5
-            new(0, 1, 0), //6
-            new(1, 1, 0)  //7
+            new(-1, -1, -1), //4
+            new(1, -1, -1), //5
+            new(-1, 1, -1), //6
+            new(1, 1, -1) //7
         ],
         Indices = [
             2, 6, 7,

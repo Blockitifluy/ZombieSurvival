@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using ZombieSurvival.Engine.NodeSystem;
 
@@ -110,12 +111,12 @@ public abstract class CollisionShape
         {
             return false;
         }
+
         Vector3 rotDiff = second.Rotation - first.Rotation;
 
-        Vector3Int pos = (Vector3Int)(Vector3.RotateEuler(first.Position - second.Position, rotDiff) + second.Position);
+        Vector3Int pos = (Vector3Int)((Vector3.RotateEuler(second.Position - first.Position, rotDiff) + first.Position) / Physics.CollisionVoxelSize);
 
         bool isColliding = false;
-
         first.ForEachVoxel((pos0, voxel0) =>
         {
             if (!voxel0)
@@ -126,7 +127,6 @@ public abstract class CollisionShape
             Vector3Int localPos = pos0;
 
             bool inside = Physics.InPointInside(localPos, second.GetVoxelsPerDimension());
-
             if (!inside)
             {
                 return false;
@@ -153,10 +153,10 @@ public abstract class CollisionShape
     /// <returns>True, if a point is intersecting.</returns>
     public bool IsPointCollidingInBounds(Vector3 point)
     {
-        Vector3 pos = Vector3.RotateEuler(point - Position, Rotation),
-            bounds = (Scale * Bounds) + point;
+        Vector3 bounds = Scale * Bounds,
+        pos = point - Position;
 
-        return Physics.InPointInside(point, pos, bounds);
+        return Physics.InPointInside(pos, bounds);
     }
 
     /// <summary>
@@ -166,21 +166,14 @@ public abstract class CollisionShape
     /// <returns>True, if a point is inside or colliding.</returns>
     public bool IsPointColliding(Vector3 point)
     {
-        Vector3 pos = point - Position;
-
-        Vector3Int intStep = new(
-            (int)pos.X,
-            (int)pos.Y,
-            (int)pos.Z
-        );
-
-        Vector3Int voxelDimension = GetVoxelsPerDimension();
-
-        if (!Physics.InPointInside(intStep, voxelDimension))
+        if (!IsPointCollidingInBounds(point))
         {
             return false;
         }
 
+        Vector3 posRot = point - Position;
+
+        Vector3Int intStep = (Vector3Int)(posRot * Physics.CollisionVoxelSize);
         bool colliding = CollisonVoxels[intStep.X, intStep.Y, intStep.Z];
 
         return colliding;
@@ -233,6 +226,24 @@ public sealed class Collider : Node3D
         CollisionShape?.CalculateCollisionVoxels();
     }
 
+    public static bool IsColliderValid([NotNullWhen(true)] Collider? collider, [NotNullWhen(true)] out CollisionShape? shape)
+    {
+        if (collider is null)
+        {
+            shape = null;
+            return false;
+        }
+
+        if (collider.CollisionShape is null)
+        {
+            shape = null;
+            return false;
+        }
+
+        shape = collider.CollisionShape;
+        return true;
+    }
+
     public override void Awake()
     {
         base.Awake();
@@ -242,9 +253,14 @@ public sealed class Collider : Node3D
         Colliders.Add(this);
     }
 
-    public override void UpdateFixed()
+    public Collider[] GetTouchingCollider() // TODO - Add filter
     {
-        base.UpdateFixed();
+        List<Collider> colliders = [];
+
+        if (!IsColliderValid(this, out var shape))
+        {
+            return [];
+        }
 
         foreach (Collider other in Colliders)
         {
@@ -253,18 +269,30 @@ public sealed class Collider : Node3D
                 continue;
             }
 
-            if (CollisionShape is null || other.CollisionShape is null)
+            if (!IsColliderValid(other, out var otherShape))
             {
                 continue;
             }
 
-            bool inBounds = CollisionShape.IsColliding(CollisionShape, other.CollisionShape);
+            bool inBounds = CollisionShape.IsColliding(shape, otherShape);
 
             if (inBounds)
             {
-                OnCollision?.Invoke(this, other);
-                Console.WriteLine("Colliding!");
+                colliders.Add(other);
             }
+        }
+
+        return [.. colliders];
+    }
+
+    public override void UpdateFixed()
+    {
+        base.UpdateFixed();
+
+        var touching = GetTouchingCollider();
+        foreach (var collider in touching)
+        {
+            OnCollision?.Invoke(this, collider);
         }
     }
 }

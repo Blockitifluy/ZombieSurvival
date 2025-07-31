@@ -18,7 +18,7 @@ public class Mover : Node3D
     {
         base.Start();
 
-        From = Position;
+        From = GlobalPosition;
     }
 
     public override void Update(double delta)
@@ -27,11 +27,11 @@ public class Mover : Node3D
 
         Vector3 dir = (To - From).Unit;
 
-        float remainingDist = (To - Position).Magnitude,
+        float remainingDist = (To - GlobalPosition).Magnitude,
         plannedDist = (float)delta * Speed;
         float distance = float.Min(plannedDist, remainingDist);
 
-        Position += dir * distance;
+        GlobalPosition += dir * distance;
 
         if (distance == remainingDist)
         {

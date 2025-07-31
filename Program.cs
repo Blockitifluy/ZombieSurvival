@@ -12,7 +12,6 @@ namespace ZombieSurvival;
 
 // TODO - Write Tests
 // TODO - Text Rendering
-// TODO - Convert Mesh file to mesh obj
 
 public static class Program
 {
@@ -40,27 +39,24 @@ public static class Program
 	{
 		_ = Node.New<Player>(null);
 
-		Mover mover = Node.New<Mover>(null, "awesome-mover");
-		mover.To = EVector3.Forward * 10;
-		mover.Speed = 2f;
+		RigidBody rigid = Node.New<RigidBody>(null, "awe-body");
+		rigid.GlobalPosition = EVector3.Up * 10.0f;
 
-		MeshContainer awesomeCube = Node.New<MeshContainer>(mover, "awesome-cube");
-		awesomeCube.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Cube);
-		awesomeCube.Mesh.SaveResource("resources/meshs/cube.mesh");
-		awesomeCube.Texture0 = "awesome.png";
+		MeshContainer awesomeCube = Node.New<MeshContainer>(rigid, "awesome-cube");
+		awesomeCube.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Cube); // Resource.LoadResourceFromFile<Mesh>("resources/meshs/cup.mesh");
 
-		Collider collision0 = Node.New<Collider>(mover, "awe-collision");
+		Collider collision0 = Node.New<Collider>(rigid, "awe-collision");
 		collision0.ApplyCollisionShape(new CubeCollision());
+		rigid.Collider = collision0;
 
 		MeshContainer crateCube = Node.New<MeshContainer>(null, "crate-cube");
 		crateCube.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Cube);
-		crateCube.Position = EVector3.Forward * 5f;
 		crateCube.Texture0 = "container.png";
 
 		Collider collision1 = Node.New<Collider>(crateCube, "crate-collision");
 		collision1.ApplyCollisionShape(new CubeCollision());
 
-		SceneHandler.SaveScene(Tree.GetTree(), "resources/scenes/demo.scene");
+		SceneHandler.SaveScene(Tree.GetTree(), "resources/scenes/collider.scene");
 	}
 
 	public const string ProgramHelp = """
@@ -72,6 +68,7 @@ public static class Program
 	{
 		using Tree tree = Tree.InitaliseTree();
 
+#if !DEBUG
 		if (args.Length == 0)
 		{
 			Console.WriteLine(ProgramHelp);
@@ -90,6 +87,9 @@ public static class Program
 			string path = args[1];
 			SceneHandler.LoadScene(tree, path);
 		}
+#else
+		CreateTestScene();
+#endif
 
 		RunWindow();
 

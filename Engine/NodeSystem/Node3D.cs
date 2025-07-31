@@ -50,9 +50,36 @@ public class Node3D : Node
     }
     public Quaternion Quaternion => _Quaternion;
 
-    public EVector3 GlobalPosition => _GlobalPosition;
-    public EVector3 GlobalRotation => _GlobalRotation;
-    public EVector3 GlobalScale => _GlobalScale;
+    public EVector3 GlobalPosition
+    {
+        get => _GlobalPosition;
+        set
+        {
+            Vector3 global = _GlobalPosition - Position;
+
+            Position = value - global;
+        }
+    }
+    public EVector3 GlobalRotation
+    {
+        get => _GlobalRotation;
+        set
+        {
+            Vector3 global = _GlobalRotation - Rotation;
+
+            Rotation = value - global;
+        }
+    }
+    public EVector3 GlobalScale
+    {
+        get => _GlobalScale;
+        set
+        {
+            Vector3 global = _GlobalScale / Scale;
+
+            Scale = global / value;
+        }
+    }
     public Quaternion GlobalQuaternion => _GlobalQuaternion;
 
     private EVector3 _Front = EVector3.Forward;

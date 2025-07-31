@@ -92,29 +92,21 @@ public static partial class Physics
         foreach (Node node in filterList)
         {
             bool isDescendant = node.IsDescendant(collider) || node == collider;
-            if (isDescendant && filter == Ray.RaycastFilter.Include)
+            if (isDescendant)
             {
-                return true;
+                return filter == Ray.RaycastFilter.Include;
             }
         }
 
         return filter == Ray.RaycastFilter.Exclude;
     }
 
-    /// <summary>
-    /// Gets all objects that have collided with a ray.
-    /// </summary>
-    /// <param name="ray">The ray object</param>
-    /// <returns>The array of objects hit by the ray (from closest to farthest).</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Direction is zero</exception>
-    public static RaycastResult[] RaycastList(Ray ray)
+    private static List<RaycastResult> RaycastListUnsorted(Ray ray)
     {
         List<Collider> colliders = Collider.Colliders;
         List<RaycastResult> hitTarget = [];
 
-        Vector3Int intOrigin = (Vector3Int)ray.Origin;
-
-        if (ray.Direction.X == 0 && ray.Direction.Y == 0 && ray.Direction.Z == 0)
+        if (ray.Direction == Vector3.Zero)
         {
             throw new ArgumentOutOfRangeException(nameof(ray), "Raycast in zero direction");
         }
@@ -125,9 +117,6 @@ public static partial class Physics
             {
                 continue;
             }
-
-            Vector3 pos = collider.GlobalPosition,
-            scale = collider.GlobalScale;
 
             bool inSight = IsIn180Sight(ray.Origin, ray.Direction, collider);
             if (!inSight)
@@ -141,44 +130,47 @@ public static partial class Physics
                 continue;
             }
 
-            Vector3 step = Vector3.Zero,
-            globalStep = Vector3.Zero;
+            Vector3 globalStep = Vector3.Zero;
+            int i = 0;
 
-            bool enteredOnce = false;
-
-            while (globalStep.Magnitude < ray.Direction.Magnitude)
+            while (globalStep.Magnitude <= ray.Direction.Magnitude)
             {
-                globalStep += ray.Direction.Unit * CollisionVoxelSize;
-                step += ray.Direction.Unit;
-                bool isInside = shape.IsPointCollidingInBounds(globalStep + ray.Origin);
-                if (!isInside)
-                {
-                    if (enteredOnce)
-                    {
-                        break;
-                    }
-                    continue;
-                }
+                Vector3 point = globalStep + ray.Origin;
 
-                enteredOnce = true;
-
-                bool isColliding = shape.IsPointColliding(globalStep + ray.Origin);
-
+                bool isColliding = shape.IsPointColliding(point);
                 if (isColliding)
                 {
-                    hitTarget.Add(new()
+                    RaycastResult result = new()
                     {
-                        Hit = ray.Origin + globalStep,
+                        Hit = point,
                         Target = collider
-                    });
+                    };
+
+                    hitTarget.Add(result);
                     break;
                 }
+
+                globalStep += ray.Direction.Unit * CollisionVoxelSize;
+                i++;
             }
         }
 
-        hitTarget.Sort((x, y) => (int)(y.Hit.Magnitude * 100 - x.Hit.Magnitude * 100));
+        return hitTarget;
+    }
 
-        return [.. hitTarget];
+    /// <summary>
+    /// Gets all objects that have collided with a ray.
+    /// </summary>
+    /// <param name="ray">The ray object</param>
+    /// <returns>The array of objects hit by the ray (from closest to farthest).</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Direction is zero</exception>
+    public static RaycastResult[] RaycastList(Ray ray)
+    {
+        var casts = RaycastListUnsorted(ray);
+
+        casts.Sort((x, y) => (int)(y.Hit * 1000 - x.Hit * 1000).Magnitude);
+
+        return [.. casts];
     }
 
     /// <summary>
@@ -189,14 +181,21 @@ public static partial class Physics
     /// <returns>The first object hit</returns>
     public static RaycastResult? Raycast(Ray ray)
     {
-        var rays = RaycastList(ray);
+        var casts = RaycastListUnsorted(ray);
 
-        if (rays.Length == 0)
+        float currentDist = float.PositiveInfinity;
+        RaycastResult? current = null;
+
+        foreach (RaycastResult raycast in casts)
         {
-            return null;
+            float dist = (ray.Origin - raycast.Hit).Magnitude;
+            if (currentDist > dist)
+            {
+                current = raycast;
+            }
         }
 
-        return rays[0];
+        return current;
     }
 
     /// <inheritdoc cref="RaycastList(Ray)"/>

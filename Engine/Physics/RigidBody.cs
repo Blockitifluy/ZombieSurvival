@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using ZombieSurvival.Engine.NodeSystem;
 
 namespace ZombieSurvival.Engine.Physics;
@@ -15,15 +16,54 @@ public sealed class RigidBody : Node3D
 
     public Vector3 Acceleration;
 
-    public override void Update(double delta)
+    public Collider? Collider;
+
+    private Vector3 DirectionToGetOut(out bool needToGetOut)
     {
-        base.Update(delta);
+        if (!Collider.IsColliderValid(Collider, out var _))
+        {
+            needToGetOut = false;
+            return Vector3.Zero;
+        }
 
-        Vector3 fall = -Vector3.Up * Mass * Gravity;
+        Collider[] touching = Collider.GetTouchingCollider();
+        if (touching.Length == 0)
+        {
+            needToGetOut = false;
+            return Vector3.Zero;
+        }
 
-        Vector3 final = fall * AirResistance;
+        Vector3 total = Vector3.Zero, averageOut;
 
-        Acceleration += final;
-        Position += Acceleration;
+        foreach (Collider other in touching)
+        {
+            total += Collider.GlobalPosition - other.GlobalPosition;
+        }
+
+        averageOut = total / touching.Length;
+
+        needToGetOut = true;
+        return averageOut;
+    }
+
+    public override void UpdateFixed()
+    {
+        base.UpdateFixed();
+
+        Vector3 fall = -Vector3.Up * (Mass * Gravity * AirResistance),
+        final = fall * (float)Tree.FixedUpdateSeconds;
+
+        Acceleration = final;
+
+        Vector3 directionOut = DirectionToGetOut(out bool needToGetOut);
+        if (needToGetOut)
+        {
+            Console.WriteLine("out");
+            GlobalPosition += directionOut; //  + (-Acceleration.Unit * Scale / 2)
+            return;
+        }
+        Console.WriteLine("in");
+
+        GlobalPosition += Acceleration;
     }
 }

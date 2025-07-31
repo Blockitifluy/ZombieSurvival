@@ -59,7 +59,15 @@ public class Player : Character
 
         MoveCamera((float)delta);
 
-        Ray ray = new(Camera.GlobalPosition, Camera.Front)
+        if (Input.MouseState.IsButtonPressed(MouseButton.Button1))
+        {
+            ShootRay();
+        }
+    }
+
+    private void ShootRay()
+    {
+        Ray ray = new(Camera.GlobalPosition, Camera.Front * 20)
         {
             FilterList = [this]
         };
@@ -69,8 +77,10 @@ public class Player : Character
         if (result.HasValue)
         {
             Console.WriteLine(result.Value);
+            Position = result.Value.Hit;
         }
     }
+
     public override void Awake()
     {
         base.Awake();

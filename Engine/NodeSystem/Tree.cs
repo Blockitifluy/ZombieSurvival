@@ -117,9 +117,9 @@ public sealed class Tree : IDisposable
     }
 
     // In milliseconds
-    public const int FixedUpdateTime = 50;
+    public const int FixedUpdateTime = 10;
 
-    public static double FixedUpdateSeconds => (double)50 / 1000;
+    public const double FixedUpdateSeconds = (double)FixedUpdateTime / 1000;
 
     public void UpdateAllNodesFixed(object? state)
     {
