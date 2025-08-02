@@ -10,13 +10,13 @@ public sealed class RigidBody : Node3D
     public float Mass { get; set; } = 1.0f;
     [Export]
     public float Gravity { get; set; } = 9.8f;
-
     [Export]
     public float AirResistance { get; set; } = 0.95f;
 
     public Vector3 Acceleration;
 
-    public Collider? Collider;
+    [Export]
+    public Collider? Collider { get; set; }
 
     private Vector3 DirectionToGetOut(out bool needToGetOut)
     {
@@ -37,10 +37,10 @@ public sealed class RigidBody : Node3D
 
         foreach (Collider other in touching)
         {
-            total += Collider.GlobalPosition - other.GlobalPosition;
+            total += (GlobalPosition - other.GlobalPosition).Unit;
         }
 
-        averageOut = total / touching.Length;
+        averageOut = GlobalPosition + (total / touching.Length);
 
         needToGetOut = true;
         return averageOut;
@@ -50,19 +50,23 @@ public sealed class RigidBody : Node3D
     {
         base.UpdateFixed();
 
-        Vector3 fall = -Vector3.Up * (Mass * Gravity * AirResistance),
+        Vector3 fall = -Vector3.Up * (Mass * Gravity),
         final = fall * (float)Tree.FixedUpdateSeconds;
 
-        Acceleration = final;
+        Acceleration += final;
+        Acceleration *= AirResistance;
 
-        Vector3 directionOut = DirectionToGetOut(out bool needToGetOut);
-        if (needToGetOut)
+        Ray ray = new(GlobalPosition, Acceleration)
         {
-            Console.WriteLine("out");
-            GlobalPosition += directionOut; //  + (-Acceleration.Unit * Scale / 2)
-            return;
+            FilterList = [this],
+            FilterType = Ray.RaycastFilter.Exclude
+        };
+
+        RaycastResult? raycast = Physics.Raycast(ray);
+        if (raycast.HasValue)
+        {
+            GlobalPosition = raycast.Value.Hit;
         }
-        Console.WriteLine("in");
 
         GlobalPosition += Acceleration;
     }

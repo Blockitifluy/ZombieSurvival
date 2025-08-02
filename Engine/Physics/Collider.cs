@@ -124,7 +124,7 @@ public abstract class CollisionShape
                 return false;
             }
 
-            Vector3Int localPos = pos0;
+            Vector3Int localPos = pos - pos0;
 
             bool inside = Physics.InPointInside(localPos, second.GetVoxelsPerDimension());
             if (!inside)

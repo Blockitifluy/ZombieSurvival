@@ -125,7 +125,6 @@ public sealed class Tree : IDisposable
     {
         var nodes = GetAllNodes();
 
-
         foreach (Node node in nodes)
         {
             try

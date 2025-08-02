@@ -18,11 +18,6 @@ public class ResourceException : Exception
 /// </summary>
 public abstract class Resource
 {
-    /// <summary>
-    /// The flag used is <see cref="NodeSystem.SceneHandler"/> when the resource is saved.
-    /// </summary>
-    public const string ResourceFlag = "r";
-
     private bool _SavedToFile = false;
 
     /// <summary>

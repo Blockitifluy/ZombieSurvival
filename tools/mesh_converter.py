@@ -63,7 +63,7 @@ if __name__ == "__main__":
     mesh_path = sys.argv[1]
     export_path = sys.argv[2]
     path = pathlib.Path(mesh_path)
-    if path.suffix != ".obj":
+    if path.suffixes[-1] != ".obj":
         raise NameError("This script only accepts .obj")
     parsed = parse_mesh(mesh_path)
     json_p = json.dumps(parsed)

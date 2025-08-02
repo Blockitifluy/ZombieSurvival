@@ -5,7 +5,6 @@ using ZombieSurvival.Engine;
 using ZombieSurvival.Engine.Graphics;
 using ZombieSurvival.Engine.NodeSystem;
 using ZombieSurvival.Engine.Physics;
-using ZombieSurvival.Nodes;
 using ZombieSurvival.Nodes.Character;
 
 namespace ZombieSurvival;
@@ -40,10 +39,11 @@ public static class Program
 		_ = Node.New<Player>(null);
 
 		RigidBody rigid = Node.New<RigidBody>(null, "awe-body");
-		rigid.GlobalPosition = EVector3.Up * 10.0f;
+		rigid.GlobalPosition = EVector3.Up * 50.0f;
+		rigid.Mass = 0.5f;
 
 		MeshContainer awesomeCube = Node.New<MeshContainer>(rigid, "awesome-cube");
-		awesomeCube.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Cube); // Resource.LoadResourceFromFile<Mesh>("resources/meshs/cup.mesh");
+		awesomeCube.Mesh = Resource.LoadResourceFromFile<Mesh>("resources/meshs/cup.mesh");
 
 		Collider collision0 = Node.New<Collider>(rigid, "awe-collision");
 		collision0.ApplyCollisionShape(new CubeCollision());
@@ -67,8 +67,8 @@ public static class Program
 	public static int Main(string[] args)
 	{
 		using Tree tree = Tree.InitaliseTree();
+		Console.Title = "Engine";
 
-#if !DEBUG
 		if (args.Length == 0)
 		{
 			Console.WriteLine(ProgramHelp);
@@ -87,9 +87,6 @@ public static class Program
 			string path = args[1];
 			SceneHandler.LoadScene(tree, path);
 		}
-#else
-		CreateTestScene();
-#endif
 
 		RunWindow();
 

@@ -59,7 +59,6 @@ public struct Ray(Vector3 origin, Vector3 dir)
     }
 }
 
-
 public static partial class Physics
 {
     /// <summary>
@@ -91,7 +90,7 @@ public static partial class Physics
     {
         foreach (Node node in filterList)
         {
-            bool isDescendant = node.IsDescendant(collider) || node == collider;
+            bool isDescendant = collider.IsDescendant(node) || node == collider;
             if (isDescendant)
             {
                 return filter == Ray.RaycastFilter.Include;
