@@ -24,7 +24,7 @@ public abstract class Resource
     /// Is a resource saved to a file.
     /// </summary>
     [JsonIgnore]
-    public bool SavedToFile { get => _SavedToFile; }
+    public bool SavedToFile => _SavedToFile;
 
     private string? _FilePath = null;
 
@@ -32,11 +32,11 @@ public abstract class Resource
     /// Where the resource saved to.
     /// </summary>
     [JsonIgnore]
-    public string? FilePath
+    public string FilePath
     {
         get
         {
-            if (!_SavedToFile)
+            if (!_SavedToFile || _FilePath == null)
             {
                 throw new ResourceException("Tried to get file path, however the resource isn't saved.");
             }
@@ -128,18 +128,21 @@ public abstract class Resource
     /// <returns>Is a saved resource</returns>
     public static bool IsSavedResource<T>(T? obj, out string? path) where T : class
     {
-        if (obj is Resource res)
+        if (obj is not Resource res)
         {
-            bool isSaved = res.SavedToFile;
-
-            if (isSaved)
-            {
-                path = res.FilePath;
-                return true;
-            }
+            path = null;
+            return false;
         }
 
-        path = null;
-        return false;
+        bool isSaved = res.SavedToFile;
+
+        if (!isSaved)
+        {
+            path = null;
+            return false;
+        }
+
+        path = res.FilePath;
+        return true;
     }
 }

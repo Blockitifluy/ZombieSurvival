@@ -7,12 +7,15 @@ using OpenTK.Mathematics;
 
 namespace ZombieSurvival.Engine;
 
+// Vector3
+
 public struct Vector3(float x = 0, float y = 0, float z = 0)
 {
     public float X { get; set; } = x;
     public float Y { get; set; } = y;
     public float Z { get; set; } = z;
 
+    #region Constants
     public static Vector3 Zero => zero;
     public static Vector3 One => one;
     public static Vector3 Right => right;
@@ -24,7 +27,9 @@ public struct Vector3(float x = 0, float y = 0, float z = 0)
     private static readonly Vector3 right = new(1, 0, 0);
     private static readonly Vector3 up = new(0, 1, 0);
     private static readonly Vector3 foward = new(0, 0, 1);
+    #endregion
 
+    #region Operators
     public static Vector3 operator /(Vector3 left, Vector3 right)
     {
         return new(
@@ -108,6 +113,7 @@ public struct Vector3(float x = 0, float y = 0, float z = 0)
     public static explicit operator Vector3(GLVector3 vector) => new(vector.X, vector.Y, vector.Z);
 
     public static explicit operator Vector3Int(Vector3 vector) => new((int)vector.X, (int)vector.Y, (int)vector.Z);
+    #endregion
 
     public override readonly bool Equals([NotNullWhen(true)] object? obj)
     {
@@ -239,6 +245,7 @@ public struct Vector3Int(int x = 0, int y = 0, int z = 0)
     public int Y { get; set; } = y;
     public int Z { get; set; } = z;
 
+    #region Constants
     public static Vector3Int Zero => zero;
     public static Vector3Int One => one;
     public static Vector3Int Right => right;
@@ -250,7 +257,9 @@ public struct Vector3Int(int x = 0, int y = 0, int z = 0)
     private static readonly Vector3Int right = new(1, 0, 0);
     private static readonly Vector3Int up = new(0, 1, 0);
     private static readonly Vector3Int foward = new(0, 0, 1);
+    #endregion
 
+    #region Operators
     public static Vector3Int operator /(Vector3Int left, Vector3Int right)
     {
         return new(
@@ -334,6 +343,7 @@ public struct Vector3Int(int x = 0, int y = 0, int z = 0)
     public static explicit operator Vector3Int(Vector3i vector) => new(vector.X, vector.Y, vector.Z);
 
     public static explicit operator Vector3(Vector3Int vector) => new(vector.X, vector.Y, vector.Z);
+    #endregion
 
     public override readonly bool Equals([NotNullWhen(true)] object? obj)
     {
@@ -407,157 +417,14 @@ public struct Vector3Int(int x = 0, int y = 0, int z = 0)
     public readonly Vector3 Unit => this == Zero ? Vector3.Zero : (Vector3)this / Magnitude;
 }
 
-public struct Vector2Int(int x = 0, int y = 0)
-{
-    public int X { get; set; } = x;
-    public int Y { get; set; } = y;
-
-    public static Vector2Int Zero => zero;
-    public static Vector2Int One => one;
-    public static Vector2Int Right => right;
-    public static Vector2Int Up => up;
-
-    private static readonly Vector2Int zero = new(0, 0);
-    private static readonly Vector2Int one = new(1, 1);
-    private static readonly Vector2Int right = new(1, 0);
-    private static readonly Vector2Int up = new(0, 1);
-
-    public static Vector2Int operator /(Vector2Int left, Vector2Int right)
-    {
-        return new(
-            left.X / right.X,
-            left.Y / right.Y
-        );
-    }
-
-    public static Vector2Int operator /(Vector2Int left, int right)
-    {
-        return new(
-            left.X / right,
-            left.Y / right
-        );
-    }
-
-    public static Vector2Int operator *(Vector2Int left, Vector2Int right)
-    {
-        return new(
-            left.X * right.X,
-            left.Y * right.Y
-        );
-    }
-
-    public static Vector2Int operator *(Vector2Int left, int right)
-    {
-        return new(
-            left.X * right,
-            left.Y * right
-        );
-    }
-
-    public static Vector2Int operator *(int left, Vector2Int right)
-    {
-        return new(
-            left * right.X,
-            left * right.Y
-        );
-    }
-
-    public static Vector2Int operator +(Vector2Int left, Vector2Int right)
-    {
-        return new(
-            left.X + right.X,
-            left.Y + right.Y
-        );
-    }
-
-    public static Vector2Int operator -(Vector2Int left, Vector2Int right)
-    {
-        return new(
-            left.X - right.X,
-            left.Y - right.Y
-        );
-    }
-
-    public static Vector2Int operator -(Vector2Int vector)
-    {
-        return new(-vector.X, -vector.Y);
-    }
-
-    public static bool operator ==(Vector2Int left, Vector2Int right)
-    {
-        return left.Equals(right);
-    }
-
-    public static bool operator !=(Vector2Int left, Vector2Int right)
-    {
-        return !(left == right);
-    }
-
-    public override readonly bool Equals([NotNullWhen(true)] object? obj)
-    {
-        if (obj is not Vector2 other)
-            throw new InvalidCastException($"Object has to be Vector2");
-        return X == other.X && Y == other.Y;
-    }
-
-    public override readonly string ToString()
-    {
-        return $"({X}, {Y})";
-    }
-
-    public override readonly int GetHashCode()
-    {
-        return base.GetHashCode();
-    }
-
-    public static explicit operator Vector2(Vector2Int vector) => new(vector.X, vector.Y);
-
-    public int this[int index]
-    {
-        readonly get
-        {
-            ArgumentOutOfRangeException.ThrowIfLessThan(index, 0, nameof(index));
-            ArgumentOutOfRangeException.ThrowIfGreaterThan(index, 1, nameof(index));
-
-            return index switch
-            {
-                0 => X,
-                1 => Y,
-                _ => 0,
-            };
-        }
-        set
-        {
-            ArgumentOutOfRangeException.ThrowIfLessThan(index, 0, nameof(index));
-            ArgumentOutOfRangeException.ThrowIfGreaterThan(index, 1, nameof(index));
-
-            switch (index)
-            {
-                case 0:
-                    X = value;
-                    break;
-                case 1:
-                    Y = value;
-                    break;
-            }
-        }
-    }
-
-    [JsonIgnore]
-    public readonly float Magnitude
-    {
-        get { return float.Sqrt(X * X + Y * Y); }
-    }
-
-    [JsonIgnore]
-    public readonly Vector2 Unit => this == Zero ? Vector2.Zero : (Vector2)this / Magnitude;
-}
+// Vector2
 
 public struct Vector2(float x = 0, float y = 0)
 {
     public float X { get; set; } = x;
     public float Y { get; set; } = y;
 
+    #region Constants
     public static Vector2 Zero => zero;
     public static Vector2 One => one;
     public static Vector2 Right => right;
@@ -567,7 +434,9 @@ public struct Vector2(float x = 0, float y = 0)
     private static readonly Vector2 one = new(1, 1);
     private static readonly Vector2 right = new(1, 0);
     private static readonly Vector2 up = new(0, 1);
+    #endregion
 
+    #region Operators
     public static Vector2 operator /(Vector2 left, Vector2 right)
     {
         return new(
@@ -638,6 +507,7 @@ public struct Vector2(float x = 0, float y = 0)
     {
         return !(left == right);
     }
+    #endregion
 
     public override readonly bool Equals([NotNullWhen(true)] object? obj)
     {
@@ -697,4 +567,154 @@ public struct Vector2(float x = 0, float y = 0)
 
     [JsonIgnore]
     public readonly Vector2 Unit => this == Zero ? Zero : this / Magnitude;
+}
+
+public struct Vector2Int(int x = 0, int y = 0)
+{
+    public int X { get; set; } = x;
+    public int Y { get; set; } = y;
+
+    #region Constants
+    public static Vector2Int Zero => zero;
+    public static Vector2Int One => one;
+    public static Vector2Int Right => right;
+    public static Vector2Int Up => up;
+
+    private static readonly Vector2Int zero = new(0, 0);
+    private static readonly Vector2Int one = new(1, 1);
+    private static readonly Vector2Int right = new(1, 0);
+    private static readonly Vector2Int up = new(0, 1);
+    #endregion
+
+    #region Operators
+    public static Vector2Int operator /(Vector2Int left, Vector2Int right)
+    {
+        return new(
+            left.X / right.X,
+            left.Y / right.Y
+        );
+    }
+
+    public static Vector2Int operator /(Vector2Int left, int right)
+    {
+        return new(
+            left.X / right,
+            left.Y / right
+        );
+    }
+
+    public static Vector2Int operator *(Vector2Int left, Vector2Int right)
+    {
+        return new(
+            left.X * right.X,
+            left.Y * right.Y
+        );
+    }
+
+    public static Vector2Int operator *(Vector2Int left, int right)
+    {
+        return new(
+            left.X * right,
+            left.Y * right
+        );
+    }
+
+    public static Vector2Int operator *(int left, Vector2Int right)
+    {
+        return new(
+            left * right.X,
+            left * right.Y
+        );
+    }
+
+    public static Vector2Int operator +(Vector2Int left, Vector2Int right)
+    {
+        return new(
+            left.X + right.X,
+            left.Y + right.Y
+        );
+    }
+
+    public static Vector2Int operator -(Vector2Int left, Vector2Int right)
+    {
+        return new(
+            left.X - right.X,
+            left.Y - right.Y
+        );
+    }
+
+    public static Vector2Int operator -(Vector2Int vector)
+    {
+        return new(-vector.X, -vector.Y);
+    }
+
+    public static bool operator ==(Vector2Int left, Vector2Int right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(Vector2Int left, Vector2Int right)
+    {
+        return !(left == right);
+    }
+    #endregion
+
+    public override readonly bool Equals([NotNullWhen(true)] object? obj)
+    {
+        if (obj is not Vector2 other)
+            throw new InvalidCastException($"Object has to be Vector2");
+        return X == other.X && Y == other.Y;
+    }
+
+    public override readonly string ToString()
+    {
+        return $"({X}, {Y})";
+    }
+
+    public override readonly int GetHashCode()
+    {
+        return base.GetHashCode();
+    }
+
+    public static explicit operator Vector2(Vector2Int vector) => new(vector.X, vector.Y);
+
+    public int this[int index]
+    {
+        readonly get
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(index, 0, nameof(index));
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(index, 1, nameof(index));
+
+            return index switch
+            {
+                0 => X,
+                1 => Y,
+                _ => 0,
+            };
+        }
+        set
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(index, 0, nameof(index));
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(index, 1, nameof(index));
+
+            switch (index)
+            {
+                case 0:
+                    X = value;
+                    break;
+                case 1:
+                    Y = value;
+                    break;
+            }
+        }
+    }
+
+    [JsonIgnore]
+    public readonly float Magnitude
+    {
+        get { return float.Sqrt(X * X + Y * Y); }
+    }
+
+    [JsonIgnore]
+    public readonly Vector2 Unit => this == Zero ? Vector2.Zero : (Vector2)this / Magnitude;
 }

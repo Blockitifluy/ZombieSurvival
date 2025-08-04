@@ -105,6 +105,11 @@ public sealed class Tree : IDisposable
 
         foreach (Node node in nodes)
         {
+            if (!node.Enabled)
+            {
+                continue;
+            }
+
             try
             {
                 node.Update(delta);
@@ -127,6 +132,11 @@ public sealed class Tree : IDisposable
 
         foreach (Node node in nodes)
         {
+            if (!node.Enabled)
+            {
+                continue;
+            }
+
             try
             {
                 node.UpdateFixed();

@@ -72,7 +72,6 @@ public static class Program
 		if (args.Length == 0)
 		{
 			Console.WriteLine(ProgramHelp);
-
 			return 0;
 		}
 

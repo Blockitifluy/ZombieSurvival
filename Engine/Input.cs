@@ -15,7 +15,7 @@ public static class Input
     [AllowNull]
     public static MouseState MouseState { get; set; }
 
-    public static int InputAxis(Keys neg, Keys pos)
+    public static float InputAxis(Keys neg, Keys pos)
     {
         bool negBool = KeyboardState.IsKeyDown(neg),
         posBool = KeyboardState.IsKeyDown(pos);

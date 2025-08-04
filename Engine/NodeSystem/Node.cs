@@ -36,12 +36,19 @@ public class Node
     /// </summary>
     public bool Archive = true;
 
+    public bool Enabled = true;
+
     internal Guid _ID;
     public Guid ID => _ID;
 
     public static Tree GetTree()
     {
         return Tree.GetTree();
+    }
+
+    public override string ToString()
+    {
+        return $"{GetType().Name} {Name}";
     }
 
     #region Hierarchary
@@ -158,11 +165,7 @@ public class Node
     }
     #endregion
 
-    public override string ToString()
-    {
-        return $"{GetType().Name} {Name}";
-    }
-
+    #region Custom Methods
     /// <summary>
     /// Runs every frame.
     /// </summary>
@@ -190,6 +193,7 @@ public class Node
     protected virtual void OnDestroy() { }
 
     protected virtual void OnParent(Node? futureParent) { }
+    #endregion
 
     /// <summary>
     /// Destorys the node and it's descendants by unregistering them.

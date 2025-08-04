@@ -18,33 +18,33 @@ public sealed class RigidBody : Node3D
     [Export]
     public Collider? Collider { get; set; }
 
-    private Vector3 DirectionToGetOut(out bool needToGetOut)
-    {
-        if (!Collider.IsColliderValid(Collider, out var _))
-        {
-            needToGetOut = false;
-            return Vector3.Zero;
-        }
+    // private Vector3 DirectionToGetOut(out bool needToGetOut)
+    // {
+    //     if (!Collider.IsColliderValid(Collider, out var _))
+    //     {
+    //         needToGetOut = false;
+    //         return Vector3.Zero;
+    //     }
 
-        Collider[] touching = Collider.GetTouchingCollider();
-        if (touching.Length == 0)
-        {
-            needToGetOut = false;
-            return Vector3.Zero;
-        }
+    //     Collider[] touching = Collider.GetTouchingCollider();
+    //     if (touching.Length == 0)
+    //     {
+    //         needToGetOut = false;
+    //         return Vector3.Zero;
+    //     }
 
-        Vector3 total = Vector3.Zero, averageOut;
+    //     Vector3 total = Vector3.Zero, averageOut;
 
-        foreach (Collider other in touching)
-        {
-            total += (GlobalPosition - other.GlobalPosition).Unit;
-        }
+    //     foreach (Collider other in touching)
+    //     {
+    //         total += (GlobalPosition - other.GlobalPosition).Unit;
+    //     }
 
-        averageOut = GlobalPosition + (total / touching.Length);
+    //     averageOut = GlobalPosition + (total / touching.Length);
 
-        needToGetOut = true;
-        return averageOut;
-    }
+    //     needToGetOut = true;
+    //     return averageOut;
+    // }
 
     public override void UpdateFixed()
     {
@@ -66,6 +66,7 @@ public sealed class RigidBody : Node3D
         if (raycast.HasValue)
         {
             GlobalPosition = raycast.Value.Hit;
+            return;
         }
 
         GlobalPosition += Acceleration;

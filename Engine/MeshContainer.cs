@@ -2,10 +2,10 @@ using ZombieSurvival.Engine.NodeSystem;
 
 namespace ZombieSurvival.Engine;
 
-[SaveNode("engine.mesh-container")]
 /// <summary>
 /// Uses a mesh and textures to be rendered.
 /// </summary>
+[SaveNode("engine.mesh-container")]
 public sealed class MeshContainer : Node3D
 {
     [Export]
