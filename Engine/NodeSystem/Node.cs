@@ -34,9 +34,9 @@ public class Node
     /// <summary>
     /// Will this Node be saved, when using <see cref="SceneHandler.SaveScene(Tree, string)"/>?
     /// </summary>
-    public bool Archive = true;
-
-    public bool Enabled = true;
+    public bool Archivable { get; set; } = true;
+    [Export]
+    public bool Enabled { get; set; } = true;
 
     internal Guid _ID;
     public Guid ID => _ID;
@@ -85,7 +85,7 @@ public class Node
         var ancestors = GetAncestors();
         foreach (Node node in ancestors)
         {
-            if (!node.Archive)
+            if (!node.Archivable)
             {
                 return false;
             }

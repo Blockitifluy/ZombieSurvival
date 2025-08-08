@@ -8,6 +8,11 @@ namespace ZombieSurvival.Engine;
 [SaveNode("engine.mesh-container")]
 public sealed class MeshContainer : Node3D
 {
+    public static readonly List<MeshContainer> MeshContainers = [];
+
+    public Color Color = new(1, 1, 1);
+    public float TextureMix = 0.2f;
+
     [Export]
     public Mesh? Mesh { get; set; }
 
@@ -37,5 +42,19 @@ public sealed class MeshContainer : Node3D
 
     private readonly string[] _Textures = ["", ""];
     public string[] Textures => _Textures;
+
+    public override void Awake()
+    {
+        base.Awake();
+
+        MeshContainers.Add(this);
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+
+        MeshContainers.Remove(this);
+    }
 }
 

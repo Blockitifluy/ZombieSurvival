@@ -61,6 +61,30 @@ public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings 
 		CursorState = CursorState.Grabbed;
 	}
 
+	private static void BindTexturesToMesh(MeshContainer container)
+	{
+		const int Texture0Position = (int)TextureUnit.Texture0;
+		const int TextureRange = 2;
+
+		for (int i = 0; i < TextureRange; i++)
+		{
+			string textureName = container.Textures[i];
+			TextureUnit tunit = (TextureUnit)(Texture0Position + i);
+			GL.ActiveTexture(tunit);
+			GL.BindTexture(TextureTarget.Texture2D, Texture.GetTexture(textureName));
+		}
+	}
+
+	private static Matrix4 GetModelMatrix(MeshContainer container)
+	{
+		Matrix4 model = Matrix4.Identity
+			* Matrix4.CreateFromQuaternion(container.GlobalQuaternion)
+			* Matrix4.CreateScale((GLVector3)container.GlobalScale)
+			* Matrix4.CreateTranslation((GLVector3)container.GlobalPosition);
+
+		return model;
+	}
+
 	protected override void OnRenderFrame(FrameEventArgs e)
 	{
 		base.OnRenderFrame(e);
@@ -74,15 +98,9 @@ public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings 
 		Shader.SetMatrix4("view", CurrentCamera.GetViewMatrix());
 		Shader.SetMatrix4("projection", CurrentCamera.GetProjectionMatrix());
 
-		foreach (Node node in Tree.GetTree().GetAllNodes())
+		foreach (MeshContainer container in MeshContainer.MeshContainers)
 		{
-			if (node is not MeshContainer container)
-			{
-				continue;
-			}
-
-
-			if (container.Mesh is null)
+			if (container.Mesh is null || !container.Enabled)
 			{
 				continue;
 			}
@@ -94,25 +112,14 @@ public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings 
 			GL.BufferData(BufferTarget.ElementArrayBuffer, mesh.Indices.Length * sizeof(uint), mesh.Indices, BufferUsageHint.StaticDraw);
 			GL.BufferData(BufferTarget.ArrayBuffer, feed.Length * sizeof(float), feed, BufferUsageHint.StaticDraw);
 
-			const int Texture0Position = (int)TextureUnit.Texture0;
-			const int TextureRange = 2;
-
-			for (int i = 0; i < TextureRange; i++)
-			{
-				string textureName = container.Textures[i];
-				TextureUnit tunit = (TextureUnit)(Texture0Position + i);
-				GL.ActiveTexture(tunit);
-				GL.BindTexture(TextureTarget.Texture2D, Texture.GetTexture(textureName));
-			}
+			BindTexturesToMesh(container);
 
 			Shader.Use();
 
-			Matrix4 model = Matrix4.Identity
-			* Matrix4.CreateFromQuaternion(container.GlobalQuaternion)
-			* Matrix4.CreateScale((GLVector3)container.GlobalScale)
-			* Matrix4.CreateTranslation((GLVector3)container.GlobalPosition);
-
+			Matrix4 model = GetModelMatrix(container);
 			Shader.SetMatrix4("model", model);
+			Shader.SetColor("objectColor", container.Color);
+			Shader.SetFloat("textureMix", container.TextureMix);
 
 			GL.DrawElements(mesh.PrimitiveType, mesh.Indices.Length, DrawElementsType.UnsignedInt, 0);
 		}

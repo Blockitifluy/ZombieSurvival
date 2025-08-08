@@ -84,6 +84,12 @@ public class Shader : IDisposable
 		GL.UniformMatrix4(_uniformLocations[name], true, ref data);
 	}
 
+	public void SetColor(string name, Color data)
+	{
+		GL.UseProgram(Handle);
+		GL.Uniform4(_uniformLocations[name], data.R, data.G, data.B, 0f);
+	}
+
 	/// <summary>
 	/// Set a uniform Vector3 on this shader.
 	/// </summary>

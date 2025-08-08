@@ -59,7 +59,7 @@ public sealed class RigidBody : Node3D
         Ray ray = new(GlobalPosition, Acceleration)
         {
             FilterList = [this],
-            FilterType = Ray.RaycastFilter.Exclude
+            FilterType = CollisionFilter.Exclude
         };
 
         RaycastResult? raycast = Physics.Raycast(ray);

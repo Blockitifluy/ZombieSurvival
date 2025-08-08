@@ -87,6 +87,6 @@ public class Player : Character
 
         Camera = New<Camera>(null, "PlayerCamera");
         Camera.IsCurrentCamera = true;
-        Camera.Archive = false;
+        Camera.Archivable = false;
     }
 }

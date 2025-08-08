@@ -4,6 +4,15 @@ using ZombieSurvival.Engine.NodeSystem;
 
 namespace ZombieSurvival.Engine.Physics;
 
+public struct IntersectionFilter : ICollisionFilter
+{
+    public CollisionFilter FilterType { get; set; } = CollisionFilter.Exclude;
+    public Node[] FilterList { get; set; } = [];
+    public string CollisionGroup { get; set; } = Physics.DefaultCollisionGroup;
+
+    public IntersectionFilter() { }
+}
+
 /// <summary>
 /// Uses a voxel system to detect collisions.
 /// </summary>
@@ -183,7 +192,7 @@ public abstract class CollisionShape
 [SaveNode("engine.collider")]
 public sealed class Collider : Node3D
 {
-    static public readonly List<Collider> Colliders = [];
+    public static readonly List<Collider> Colliders = [];
 
     private CollisionShape? _CollisionShape;
     [Export]
@@ -194,6 +203,27 @@ public sealed class Collider : Node3D
     }
     [Export]
     public bool ChangeShapeTransform { get; set; } = true;
+    [Export]
+    public bool IsTrigger { get; set; } = false;
+
+    private string _CollisionGroup = Physics.DefaultCollisionGroup;
+
+    [Export]
+    public string CollisionGroup
+    {
+        get => _CollisionGroup;
+        set
+        {
+            bool isRegistered = Physics.IsGroupRegistered(value);
+
+            if (!isRegistered)
+            {
+                throw new CollisionGroupException($"Collision Group {value} is not valid");
+            }
+
+            _CollisionGroup = value;
+        }
+    }
 
     public event EventHandler<Collider>? OnCollision;
 
@@ -234,7 +264,7 @@ public sealed class Collider : Node3D
             return false;
         }
 
-        if (collider.CollisionShape is null)
+        if (collider.CollisionShape is null || !collider.Enabled)
         {
             shape = null;
             return false;
@@ -249,34 +279,67 @@ public sealed class Collider : Node3D
         base.Awake();
 
         CollisionShape?.CalculateCollisionVoxels();
-
         Colliders.Add(this);
     }
 
-    public Collider[] GetTouchingCollider() // TODO - Add filter
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+
+        Colliders.Remove(this);
+
+    }
+
+    public bool IsColliding(Collider other)
+    {
+        return IsColliding(other, DefaultIntersection);
+    }
+
+    public bool IsColliding(Collider other, IntersectionFilter filter)
+    {
+        CollisionShape? shape = CollisionShape;
+        if (shape is null)
+        {
+            return false;
+        }
+
+        if (other == this)
+        {
+            return false;
+        }
+
+        if (Physics.IncludedInFilter(other, filter))
+        {
+            return false;
+        }
+
+        if (!IsColliderValid(other, out var otherShape))
+        {
+            return false;
+        }
+
+        return CollisionShape.IsColliding(shape, otherShape);
+    }
+
+    public Collider[] GetTouchingColliders()
+    {
+        return GetTouchingColliders(DefaultIntersection);
+    }
+
+    public Collider[] GetTouchingColliders(IntersectionFilter filter)
     {
         List<Collider> colliders = [];
 
-        if (!IsColliderValid(this, out var shape))
+        if (!IsColliderValid(this, out var _))
         {
             return [];
         }
 
         foreach (Collider other in Colliders)
         {
-            if (other == this)
-            {
-                continue;
-            }
+            bool isCollision = IsColliding(other, filter);
 
-            if (!IsColliderValid(other, out var otherShape))
-            {
-                continue;
-            }
-
-            bool inBounds = CollisionShape.IsColliding(shape, otherShape);
-
-            if (inBounds)
+            if (isCollision)
             {
                 colliders.Add(other);
             }
@@ -285,11 +348,17 @@ public sealed class Collider : Node3D
         return [.. colliders];
     }
 
+    private IntersectionFilter DefaultIntersection = new()
+    {
+        FilterList = [],
+        FilterType = CollisionFilter.Exclude
+    };
+
     public override void UpdateFixed()
     {
         base.UpdateFixed();
 
-        var touching = GetTouchingCollider();
+        var touching = GetTouchingColliders();
         foreach (var collider in touching)
         {
             OnCollision?.Invoke(this, collider);

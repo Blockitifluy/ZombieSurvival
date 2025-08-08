@@ -44,6 +44,7 @@ public static class Program
 
 		MeshContainer awesomeCube = Node.New<MeshContainer>(rigid, "awesome-cube");
 		awesomeCube.Mesh = Resource.LoadResourceFromFile<Mesh>("resources/meshs/cup.mesh");
+		awesomeCube.Position += EVector3.Up;
 
 		Collider collision0 = Node.New<Collider>(rigid, "awe-collision");
 		collision0.ApplyCollisionShape(new CubeCollision());
