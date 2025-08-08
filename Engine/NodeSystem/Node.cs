@@ -51,6 +51,34 @@ public class Node
         return $"{GetType().Name} {Name}";
     }
 
+    #region Tags
+    internal List<string> _Tags = [];
+
+    /// <inheritdoc cref="TagSystem.HasTag(Node, string)"/>
+    public bool HasTag(string tag)
+    {
+        return TagSystem.HasTag(this, tag);
+    }
+
+    /// <inheritdoc cref="TagSystem.AddTag(Node, string)"/>
+    public void AddTag(string tag)
+    {
+        TagSystem.AddTag(this, tag);
+    }
+
+    /// <inheritdoc cref="TagSystem.RemoveTag(Node, string)"/>
+    public bool RemoveTag(string tag)
+    {
+        return TagSystem.RemoveTag(this, tag);
+    }
+
+    /// <inheritdoc cref="TagSystem.GetTags(Node)"/>
+    public string[] GetTags()
+    {
+        return TagSystem.GetTags(this);
+    }
+    #endregion
+
     #region Hierarchary
     /// <returns></returns>
     public TNode? FindFirstChild<TNode>(string name) where TNode : Node
@@ -205,7 +233,6 @@ public class Node
         var desendents = GetDescendant();
         foreach (Node node in desendents)
         {
-            node.OnDestroy();
             node.Parent = null;
             tree.UnregisterNode(node);
         }
