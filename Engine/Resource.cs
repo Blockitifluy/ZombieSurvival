@@ -36,7 +36,7 @@ public abstract class Resource
     {
         get
         {
-            if (!_SavedToFile || _FilePath == null)
+            if (!_SavedToFile || _FilePath is null)
             {
                 throw new ResourceException("Tried to get file path, however the resource isn't saved.");
             }

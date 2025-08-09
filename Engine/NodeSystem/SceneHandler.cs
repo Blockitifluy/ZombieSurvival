@@ -173,12 +173,12 @@ public static partial class SceneHandler
         {
             Source = info.GetValue(node);
 
-            ValueType = Source == null ? info.PropertyType : Source.GetType();
+            ValueType = Source is null ? info.PropertyType : Source.GetType();
             Name = info.Name;
 
             foreach (IFlagHandler handler in FlagHandlers)
             {
-                if (Source == null)
+                if (Source is null)
                 {
                     break;
                 }

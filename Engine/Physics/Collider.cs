@@ -4,32 +4,52 @@ using ZombieSurvival.Engine.NodeSystem;
 
 namespace ZombieSurvival.Engine.Physics;
 
+/// <summary>
+/// How collisions are filtered. Used in:
+/// <see cref="Collider.IsColliding(Collider, IntersectionFilter)"/> and <see cref="Collider.GetTouchingColliders(IntersectionFilter)"/>
+/// </summary>
 public struct IntersectionFilter : ICollisionFilter
 {
     public CollisionFilter FilterType { get; set; } = CollisionFilter.Exclude;
     public Node[] FilterList { get; set; } = [];
+    /// <inheritdoc cref="Collider.CollisionGroup"/>
     public string CollisionGroup { get; set; } = Physics.DefaultCollisionGroup;
 
     public IntersectionFilter() { }
 }
 
 /// <summary>
-/// Uses a voxel system to detect collisions.
+/// A collision shape that uses a voxel system to detect collisions.
 /// </summary>
 public abstract class CollisionShape
 {
     /// <summary>
-    /// All of the voxels of the Collision Shape
+    /// All of the voxels of the Collision Shape.
     /// </summary>
     public bool[,,] CollisonVoxels = new bool[0, 0, 0];
 
+    /// <summary>
+    /// The bounds that the CollisionShape bounds to.
+    /// </summary>
     [JsonIgnore]
     public abstract Vector3 Bounds { get; }
 
+    /// <summary>
+    /// The global position.
+    /// </summary>
     public Vector3 Position;
+    /// <summary>
+    /// The global rotation.
+    /// </summary>
     public Vector3 Rotation;
+    /// <summary>
+    /// The global scale.
+    /// </summary>
     public Vector3 Scale = Vector3.One;
 
+    /// <summary>
+    /// Calculates all of the voxels in <see cref="CollisionVoxels"/>.
+    /// </summary>
     public abstract void CalculateCollisionVoxels();
 
     public delegate bool ForVoxel(Vector3Int pos, bool voxel);
@@ -67,6 +87,10 @@ public abstract class CollisionShape
         }
     }
 
+    /// <summary>
+    /// Gets voxels per dimension of the CollisionShape.
+    /// </summary>
+    /// <returns>Voxels per dimension</returns>
     public Vector3Int GetVoxelsPerDimension()
     {
         return (Vector3Int)(Bounds * Scale / Physics.CollisionVoxelSize);
@@ -194,20 +218,25 @@ public sealed class Collider : Node3D
 {
     public static readonly List<Collider> Colliders = [];
 
-    private CollisionShape? _CollisionShape;
+    /// <inheritdoc cref="Engine.Physics.CollisionShape"/>
     [Export]
-    public CollisionShape? CollisionShape
-    {
-        get => _CollisionShape;
-        set { _CollisionShape = value; }
-    }
+    public CollisionShape? CollisionShape { get; set; }
+    /// <summary>
+    /// If <c>true</c> then, change the Collider's position when it's parent changes.
+    /// </summary>
     [Export]
     public bool ChangeShapeTransform { get; set; } = true;
+    /// <summary>
+    /// Set the collider as a trigger. This means that the collider doesn't collide or accept raycasts, only detect hits.
+    /// </summary>
     [Export]
     public bool IsTrigger { get; set; } = false;
 
     private string _CollisionGroup = Physics.DefaultCollisionGroup;
 
+    /// <summary>
+    /// The collision group that the Collider is in.
+    /// </summary>
     [Export]
     public string CollisionGroup
     {
@@ -225,8 +254,15 @@ public sealed class Collider : Node3D
         }
     }
 
+    /// <summary>
+    /// Invoked when the collider hits another.
+    /// </summary>
     public event EventHandler<Collider>? OnCollision;
 
+    /// <summary>
+    /// Applies the <paramref name="shape"/> to the Collider with transformations applied and voxels calculated.
+    /// </summary>
+    /// <param name="shape"><inheritdoc cref="CollisionShape" path="/summary"/></param>
     public void ApplyCollisionShape(CollisionShape shape)
     {
         shape.Rotation = GlobalRotation;
@@ -241,7 +277,7 @@ public sealed class Collider : Node3D
     {
         base.UpdateTransformations();
 
-        if (ChangeShapeTransform && CollisionShape != null)
+        if (ChangeShapeTransform && CollisionShape is not null)
         {
             CollisionShape.Rotation = GlobalRotation;
             CollisionShape.Scale = GlobalScale;
@@ -256,6 +292,12 @@ public sealed class Collider : Node3D
         CollisionShape?.CalculateCollisionVoxels();
     }
 
+    /// <summary>
+    /// Checks if the collider isn't null and has a shape.
+    /// </summary>
+    /// <param name="collider">The collider</param>
+    /// <param name="shape">The outputing shape.</param>
+    /// <returns><c>true</c>, if the collider is valid.</returns>
     public static bool IsColliderValid([NotNullWhen(true)] Collider? collider, [NotNullWhen(true)] out CollisionShape? shape)
     {
         if (collider is null)
@@ -290,11 +332,18 @@ public sealed class Collider : Node3D
 
     }
 
+    /// <inheritdoc cref="IsColliding(Collider, IntersectionFilter)"/>
     public bool IsColliding(Collider other)
     {
         return IsColliding(other, DefaultIntersection);
     }
 
+    /// <summary>
+    /// Checks if a collider is colliding with <paramref name="other"/>.
+    /// </summary>
+    /// <param name="other">The other collider</param>
+    /// <param name="filter">How the collision is filtered.</param>
+    /// <returns></returns>
     public bool IsColliding(Collider other, IntersectionFilter filter)
     {
         CollisionShape? shape = CollisionShape;
@@ -321,11 +370,17 @@ public sealed class Collider : Node3D
         return CollisionShape.IsColliding(shape, otherShape);
     }
 
+    /// <inheritdoc cref="GetTouchingColliders(IntersectionFilter)"/>
     public Collider[] GetTouchingColliders()
     {
         return GetTouchingColliders(DefaultIntersection);
     }
 
+    /// <summary>
+    /// Returns colliders currently collider with this collider.
+    /// </summary>
+    /// <param name="filter">How the collision is filtered.</param>
+    /// <returns>An array of colliders</returns>
     public Collider[] GetTouchingColliders(IntersectionFilter filter)
     {
         List<Collider> colliders = [];

@@ -99,6 +99,10 @@ public sealed class Tree : IDisposable
         Nodes.Remove(node);
     }
 
+    /// <summary>
+    /// Updates all nodes' <see cref="Node.Update(double)"/>.
+    /// </summary>
+    /// <param name="delta"><inheritdoc cref="Node.Update(double)" path="/param[@name='delta']"/></param>
     public void UpdateAllNodes(double delta)
     {
         var nodes = GetAllNodes();
@@ -121,11 +125,19 @@ public sealed class Tree : IDisposable
         }
     }
 
-    // In milliseconds
+    /// <summary>
+    /// The interval that fixed update is fired in milliseconds.
+    /// </summary>
     public const int FixedUpdateTime = 10;
 
+    /// <summary>
+    /// The interval that fixed update is fired in seconds.
+    /// </summary>
     public const double FixedUpdateSeconds = (double)FixedUpdateTime / 1000;
 
+    /// <summary>
+    /// Updates all nodes' <see cref="Node.UpdateFixed"/>.
+    /// </summary>
     public void UpdateAllNodesFixed(object? state)
     {
         var nodes = GetAllNodes();

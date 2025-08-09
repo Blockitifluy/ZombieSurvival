@@ -16,7 +16,13 @@ internal struct CollisionGroup(string name = Physics.DefaultCollisionGroup, ulon
 
 public static partial class Physics
 {
+    /// <summary>
+    /// The maxiumum amount of Collision Groups allowed.
+    /// </summary>
     public const int MaxGroups = 64;
+    /// <summary>
+    /// The name of the default collision group.
+    /// </summary>
     public const string DefaultCollisionGroup = "Default";
 
     private static readonly CollisionGroup[] CollisionGroups = new CollisionGroup[MaxGroups];
@@ -38,6 +44,12 @@ public static partial class Physics
     }
 
     #region Set Status
+    /// <summary>
+    /// Set the collision status of two collision groups.
+    /// </summary>
+    /// <param name="group0">The first collision group</param>
+    /// <param name="group1">The second collision group</param>
+    /// <param name="canCollide">The new collision status</param>
     public static void SetCollisionStatus(string group0, string group1, bool canCollide)
     {
         ref CollisionGroup left = ref GetCollisionGroup(group0, out int i),
@@ -64,6 +76,13 @@ public static partial class Physics
     #endregion
 
     #region Can Collide With
+    /// <summary>
+    /// Can two collision groups can collide.
+    /// </summary>
+    /// <param name="group0">The first collision group</param>
+    /// <param name="group1">The second collision group</param>
+    /// <returns><c>true</c>, if the two collision groups can collide.</returns>
+    /// <exception cref="CollisionGroupException"></exception>
     public static bool CanCollideWith(string group0, string group1)
     {
         CollisionGroup? left = GetCollisionGroup(group0, out int i),
@@ -97,6 +116,11 @@ public static partial class Physics
     #endregion
 
     #region Register Group
+    /// <summary>
+    /// Registers a collision group.
+    /// </summary>
+    /// <param name="name">The name of the collision group.</param>
+    /// <param name="i">The outputing index</param>
     public static void RegisterCollisionGroup(string name, out int i)
     {
         CollisionGroup group = new(name);
@@ -104,6 +128,7 @@ public static partial class Physics
         i = j;
     }
 
+    /// <inheritdoc cref="RegisterCollisionGroup(string, out int)"/>
     public static void RegisterCollisionGroup(string name)
     {
         CollisionGroup group = new(name);
@@ -130,6 +155,12 @@ public static partial class Physics
     #endregion
 
     #region Is Registeting
+    /// <summary>
+    /// Is this group registered.
+    /// </summary>
+    /// <param name="name">The name of the group.</param>
+    /// <param name="i">The outputing index</param>
+    /// <returns><c>true</c>, if the group is registered.</returns>
     public static bool IsGroupRegistered(string name, out int i)
     {
         for (int j = 0; j < CollisionGroups.Length; j++)
@@ -146,6 +177,7 @@ public static partial class Physics
         return false;
     }
 
+    /// <inheritdoc cref="IsGroupRegistered(string, out int)"/>
     public static bool IsGroupRegistered(string name)
     {
         return IsGroupRegistered(name, out _);

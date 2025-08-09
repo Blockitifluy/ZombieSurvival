@@ -8,12 +8,12 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 using ZombieSurvival.Engine.NodeSystem;
 
 namespace ZombieSurvival.Engine.Graphics;
-
+// TODO - Render nothing when no camera
 public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : GameWindow(gameWindowSettings, nativeWindowSettings)
 {
-	int ElementBufferObject;
-	int VertexBufferObject;
-	int VertexArrayObject;
+	private int ElementBufferObject;
+	private int VertexBufferObject;
+	private int VertexArrayObject;
 
 	[AllowNull]
 	private Shader Shader;

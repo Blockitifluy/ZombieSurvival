@@ -36,6 +36,9 @@ public sealed class Camera : Node3D
         }
     }
 
+    /// <summary> 
+    /// Field of View
+    /// </summary>
     public float Fov
     {
         get => _Fov;

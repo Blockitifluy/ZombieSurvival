@@ -1,14 +1,19 @@
 using ZombieSurvival.Engine.NodeSystem;
-using ZombieSurvival.Nodes;
 
 namespace ZombieSurvival.Engine.Physics;
 
+/// <summary>
+/// Is the collision filter mode includes or excludes.
+/// </summary>
 public enum CollisionFilter
 {
     Include,
     Exclude
 }
 
+/// <summary>
+/// An interface of Collision Filters
+/// </summary>
 public interface ICollisionFilter
 {
     /// <summary>
@@ -19,15 +24,16 @@ public interface ICollisionFilter
     /// The nodes and it's desendants that are included/excluded depending on <see cref="FilterType"/>.
     /// </summary>
     public Node[] FilterList { get; set; }
+    /// <inheritdoc cref="Collider.CollisionGroup"/>
     public string CollisionGroup { get; set; }
 }
 
 /// <summary>
 /// Contains miscellaneous methods about physics and collision.
 /// </summary>
-[SavableSingleton("Physics")]
 public static partial class Physics
 {
+    /// <inheritdoc cref="InPointInside(Vector3, Vector3, Vector3)"/>
     public static bool InPointInside(Vector3Int point, Vector3Int min, Vector3Int max)
     {
         bool inX = min.X <= point.X && point.X < max.X,
@@ -37,11 +43,19 @@ public static partial class Physics
         return inX && inY && inZ;
     }
 
+    /// <inheritdoc cref="InPointInside(Vector3, Vector3, Vector3)"/>
     public static bool InPointInside(Vector3Int point, Vector3Int max)
     {
         return InPointInside(point, Vector3Int.Zero, max);
     }
 
+    /// <summary>
+    /// Checks if a point is inside of one or two bounds.
+    /// </summary>
+    /// <param name="point">A point</param>
+    /// <param name="min">The minimum bound</param>
+    /// <param name="max">The maximum bound</param>
+    /// <returns><c>true</c>, if the point is in bounds.</returns>
     public static bool InPointInside(Vector3 point, Vector3 min, Vector3 max)
     {
         bool inX = min.X <= point.X && point.X < max.X,
@@ -51,6 +65,7 @@ public static partial class Physics
         return inX && inY && inZ;
     }
 
+    /// <inheritdoc cref="InPointInside(Vector3, Vector3, Vector3)"/>
     public static bool InPointInside(Vector3 point, Vector3 max)
     {
         return InPointInside(point, Vector3.Zero, max);
@@ -60,7 +75,7 @@ public static partial class Physics
     /// Gets all of the corners of a collider.
     /// </summary>
     /// <param name="collider">The collider</param>
-    /// <returns>All of the corners (acounting for transformations).</returns>
+    /// <returns>All of the corners (accounting for transformations).</returns>
     public static Vector3[] GetCornersOfCollider(Collider collider)
     {
         CollisionShape? shape = collider.CollisionShape;
@@ -97,6 +112,12 @@ public static partial class Physics
         return corners;
     }
 
+    /// <summary>
+    /// Is this <paramref name="collider"/> included in the <paramref name="filter"/>.
+    /// </summary>
+    /// <param name="collider">The collider</param>
+    /// <param name="filter">The collision filter</param>
+    /// <returns><c>true</c>, if the collider included in filter.</returns>
     public static bool IncludedInFilter(Collider collider, ICollisionFilter filter)
     {
         if (!CanCollideWith(collider.CollisionGroup, filter.CollisionGroup))

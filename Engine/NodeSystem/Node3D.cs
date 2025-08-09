@@ -15,6 +15,9 @@ public class Node3D : Node
     private EVector3 _Rotation = EVector3.Zero;
     private EVector3 _Scale = EVector3.One;
 
+    /// <summary>
+    /// The node's local 3D position.
+    /// </summary>
     [Export]
     public EVector3 Position
     {
@@ -25,6 +28,12 @@ public class Node3D : Node
             UpdateTransformations();
         }
     }
+    /// <summary>
+    /// The node's local 3D rotation.
+    /// </summary>
+    /// <remarks>
+    /// Uses euler angles.
+    /// </remarks>
     [Export]
     public EVector3 Rotation
     {
@@ -37,6 +46,9 @@ public class Node3D : Node
             OnNonPositionUpdate();
         }
     }
+    /// <summary>
+    /// The node's local 3D scale.
+    /// </summary>
     [Export]
     public EVector3 Scale
     {
@@ -50,6 +62,9 @@ public class Node3D : Node
     }
     public Quaternion Quaternion => _Quaternion;
 
+    /// <summary>
+    /// The node's global 3D position.
+    /// </summary>
     public EVector3 GlobalPosition
     {
         get => _GlobalPosition;
@@ -60,6 +75,12 @@ public class Node3D : Node
             Position = value - global;
         }
     }
+    /// <summary>
+    /// The node's global 3D rotation
+    /// </summary>
+    /// <remarks>
+    /// Uses euler angles.
+    /// </remarks>
     public EVector3 GlobalRotation
     {
         get => _GlobalRotation;
@@ -70,6 +91,9 @@ public class Node3D : Node
             Rotation = value - global;
         }
     }
+    /// <summary>
+    /// The node's global 3D scale.
+    /// </summary>
     public EVector3 GlobalScale
     {
         get => _GlobalScale;
@@ -86,8 +110,17 @@ public class Node3D : Node
     private EVector3 _Up = EVector3.Up;
     private EVector3 _Right = EVector3.Right;
 
+    /// <summary>
+    /// The direction of which the front face is facing.
+    /// </summary>
     public EVector3 Front => _Front;
+    /// <summary>
+    /// The direction of which the up face is facing.
+    /// </summary>
     public EVector3 Up => _Up;
+    /// <summary>
+    /// The direction of which the right face is facing.
+    /// </summary>
     public EVector3 Right => _Right;
 
     protected override void OnParent(Node? futureParent)

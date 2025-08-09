@@ -4,6 +4,12 @@ namespace ZombieSurvival.Engine.NodeSystem;
 public class Node
 {
     private Node? _Parent;
+    /// <summary>
+    /// The hierarchal parent of the Node.
+    /// </summary>
+    /// <remarks>
+    /// Cannot parent itself to: it's self, a descendant or ancestor.
+    /// </remarks>
     public Node? Parent
     {
         get => _Parent;
@@ -28,6 +34,9 @@ public class Node
             _Parent = value;
         }
     }
+    /// <summary>
+    /// The un-unique identifier of the Node. 
+    /// </summary>
     [Export]
     public string Name { get; set; } = "";
 
@@ -35,12 +44,25 @@ public class Node
     /// Will this Node be saved, when using <see cref="SceneHandler.SaveScene(Tree, string)"/>?
     /// </summary>
     public bool Archivable { get; set; } = true;
+    /// <summary>
+    /// Is the node enable
+    /// </summary>
+    /// <remarks>
+    /// If <c>false</c>, then the node will not recieve updates.
+    /// </remark>
     [Export]
     public bool Enabled { get; set; } = true;
 
     internal Guid _ID;
+    /// <summary>
+    /// The unique identifier of the node.
+    /// </summary>
     public Guid ID => _ID;
 
+    /// <summary>
+    /// Gets the main tree.
+    /// </summary>
+    /// <returns>The main tree</returns>
     public static Tree GetTree()
     {
         return Tree.GetTree();
@@ -80,14 +102,18 @@ public class Node
     #endregion
 
     #region Hierarchary
-    /// <returns></returns>
+    /// <summary>
+    /// Finds the first child that has the matching <paramref name="name"/> and is an approprate type.
+    /// </summary>
+    /// <typeparam name="TNode">The type of node being queried.</typeparam>
+    /// <param name="name">The name of the Node to be matched.</param>
+    /// <returns>The node with the matching <paramref name="name"/> and type.</returns>
     public TNode? FindFirstChild<TNode>(string name) where TNode : Node
     {
-        foreach (Node node in GetTree().GetAllNodes())
+        foreach (Node node in GetChildren())
         {
-            bool nameMatch = node.Name == name,
-            parentMatch = node.Parent == this;
-            if (nameMatch && parentMatch && node is TNode tNode)
+            bool nameMatch = node.Name == name;
+            if (nameMatch && node is TNode tNode)
             {
                 return tNode;
             }
@@ -95,12 +121,41 @@ public class Node
         return null;
     }
 
+    /// <inheritdoc cref="FindFirstChild{TNode}(string)"/>
+    /// <param name="type"><inheritdoc cref="FindFirstChild{TNode}(string)"/></param>
+    public Node? FindFirstChild(string name, Type type)
+    {
+        foreach (Node node in GetChildren())
+        {
+            bool nameMatch = node.Name == name;
+            if (nameMatch && node.GetType().IsAssignableTo(type))
+            {
+                return node;
+            }
+        }
+        return null;
+    }
+
+    /// <inheritdoc cref="FindFirstChild{TNode}(string)" path="/param[@name='name']"/>
+    /// <summary>
+    /// Finds the first child that has the matching <paramref name="name"/>.
+    /// </summary>
+    /// <returns>The node with the matching <paramref name="name"/>.</returns>
+    public Node? FindFirstChild(string name)
+    {
+        return FindFirstChild<Node>(name);
+    }
+
+    /// <summary>
+    /// Finds the first child that matchs the wanted type.
+    /// </summary>
+    /// <typeparam name="TNode">The node type being queried for.</typeparam>
+    /// <returns>The node of the wanted type</returns>
     public TNode? FindFirstChildOfType<TNode>() where TNode : Node
     {
-        foreach (Node node in GetTree().GetAllNodes())
+        foreach (Node node in GetChildren())
         {
-            bool parentMatch = node.Parent == this;
-            if (parentMatch && node is TNode tNode)
+            if (node is TNode tNode)
             {
                 return tNode;
             }
@@ -108,10 +163,32 @@ public class Node
         return null;
     }
 
+    /// <inheritdoc cref="FindFirstChildOfType{TNode}()"/>
+    /// <param name="type">The node type being queried for.</param>
+    public Node? FindFirstChildOfType(Type type)
+    {
+        foreach (Node node in GetChildren())
+        {
+            if (node.GetType().IsAssignableTo(type))
+            {
+                return node;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Searchs through the node's self and it's ancestors to see, if it can be archived.
+    /// </summary>
+    /// <returns><c>true</c>, if the node can be archived.</returns>
     public bool CanBeArchived()
     {
-        var ancestors = GetAncestors();
-        foreach (Node node in ancestors)
+        if (!Archivable)
+        {
+            return false;
+        }
+
+        foreach (Node node in GetAncestors())
         {
             if (!node.Archivable)
             {
@@ -121,6 +198,10 @@ public class Node
         return true;
     }
 
+    /// <summary>
+    /// Gets all children in the Node.
+    /// </summary>
+    /// <returns>List of Children.</returns>
     public List<Node> GetChildren()
     {
         List<Node> nodes = [];
@@ -134,6 +215,11 @@ public class Node
         return nodes;
     }
 
+    /// <summary>
+    /// Checks if the node descendes (hierarchally) from <paramref name="other"/>.
+    /// </summary>
+    /// <param name="other">Is other an ancestor of this.</param>
+    /// <returns><c>true</c>, if this is the ancestor of <paramref name="other"/>.</returns>
     public bool IsDescendant(Node other)
     {
         Node? current = Parent;
@@ -148,11 +234,22 @@ public class Node
         return false;
     }
 
+    /// <summary>
+    /// Checks if the node is an ancestor (hierarchally) to <paramref name="other"/>.
+    /// </summary>
+    /// <param name="other">Is other a desendant of this.</param>
+    /// <returns><c>true</c>, if this is the ancestor of <paramref name="other"/>.</returns>
     public bool IsAncestor(Node other)
     {
         return IsDescendant(other);
     }
 
+    /// <summary>
+    /// Gets a node based on it's unique ID.
+    /// </summary>
+    /// <typeparam name="TNode">The wanted node type.</typeparam>
+    /// <param name="id">The unique ID.</param>
+    /// <returns>A node with the ID same as <paramref name="id"/>.</returns>
     public static TNode? GetNodeByID<TNode>(Guid id) where TNode : Node
     {
         foreach (Node node in GetTree().GetAllNodes())
@@ -165,6 +262,24 @@ public class Node
         return null;
     }
 
+    /// <inheritdoc cref="GetNodeByID{TNode}(Guid)"/>
+    /// <param name="type">The wanted node type.</param>
+    public static Node? GetNodeByID(Guid id, Type type)
+    {
+        foreach (Node node in GetTree().GetAllNodes())
+        {
+            if (node.GetType().IsAssignableTo(type) && node.ID == id)
+            {
+                return node;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Gets all descendants.
+    /// </summary>
+    /// <returns>A list of nodes.</returns>
     public List<Node> GetDescendant()
     {
         List<Node> nodes = [];
@@ -179,6 +294,10 @@ public class Node
         return nodes;
     }
 
+    /// <summary>
+    /// Gets all ancestors.
+    /// </summary>
+    /// <returns>A list of nodes.</returns>
     public List<Node> GetAncestors()
     {
         List<Node> nodes = [];
@@ -218,8 +337,15 @@ public class Node
     /// </summary>
     public virtual void Start() { }
 
+    /// <summary>
+    /// Called before the node is destroyed.
+    /// </summary>
     protected virtual void OnDestroy() { }
 
+    /// <summary>
+    /// Called before the node is reparented.
+    /// </summary>
+    /// <param name="futureParent">The node's future parent.</param>
     protected virtual void OnParent(Node? futureParent) { }
     #endregion
 
@@ -243,7 +369,18 @@ public class Node
 
     #region Node Creation
 
-    public static TNode NewDisabled<TNode>(Node? parent, string? name = null) where TNode : Node, new()
+    /// <summary>
+    /// Creates a new node that is:
+    /// <list type="bullet">
+    /// <item>Has not has it's <see cref="Node.Awake"/> or <see cref="Node.Start"/> fired</item>
+    /// <item>And not registered.</item>
+    /// </list>
+    /// </summary>
+    /// <typeparam name="TNode">The node type to be created.</typeparam>
+    /// <param name="parent">The parent of the new node.</param>
+    /// <param name="name">The name of the node.</param>
+    /// <returns>The disabled node.</returns>
+    public static TNode NewDisabled<TNode>(Node? parent = null, string? name = null) where TNode : Node, new()
     {
         return new()
         {
@@ -252,11 +389,11 @@ public class Node
         };
     }
 
-    public static Node NewDisabled(Node? parent, string? name = null)
-    {
-        return NewDisabled<Node>(parent, name);
-    }
-
+    /// <summary>
+    /// Creates a new node.
+    /// </summary>
+    /// <returns>The created node.</returns>
+    /// <inheritdoc cref="NewDisabled{TNode}(Node?, string?)"/>
     public static TNode New<TNode>(Node? parent = null, string? name = null) where TNode : Node, new()
     {
         TNode node = NewDisabled<TNode>(parent, name);
@@ -267,16 +404,5 @@ public class Node
 
         return node;
     }
-
-    public static Node New(Node? parent = null, string? name = null)
-    {
-        return New<Node>(parent, name);
-    }
-
     #endregion
-
-    ~Node()
-    {
-        GetTree().UnregisterNode(this);
-    }
 }

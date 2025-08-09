@@ -102,7 +102,7 @@ public static partial class Physics
             }
 
             CollisionShape? shape = collider.CollisionShape;
-            if (shape == null)
+            if (shape is null)
             {
                 continue;
             }

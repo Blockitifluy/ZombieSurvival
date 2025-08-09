@@ -1,20 +1,28 @@
 using OpenTK.Graphics.OpenGL4;
-using System.Drawing;
-using System.Drawing.Imaging;
 using PixelFormat = OpenTK.Graphics.OpenGL4.PixelFormat;
 using StbImageSharp;
-using System.IO;
 
 namespace ZombieSurvival.Engine.Graphics;
 
 public static class Texture
 {
+    /// <summary>
+    /// The base texture directory.
+    /// </summary>
     public const string TextureDirectory = @"resources\textures";
+    /// <summary>
+    /// Shown when a texture couldn't found.
+    /// </summary>
     public const string ErrorTextureName = "error_texture.png";
     public const string NullTextureName = "null.png";
 
     private static readonly Dictionary<string, int> Textures = [];
 
+    /// <summary>
+    /// Loads the file to be used for rendering.
+    /// </summary>
+    /// <param name="path">The path of the texture.</param>
+    /// <returns>The texture ID to GL</returns>
     public static int LoadFromFile(string path)
     {
         int handle = GL.GenTexture();
@@ -43,6 +51,10 @@ public static class Texture
     }
 
     private static readonly string[] AcceptedExtensions = [".png", ".jpeg", ".jpg", ".bmp"];
+
+    /// <summary>
+    /// Load all textures for rendering.
+    /// </summary>
     public static void LoadTextures()
     {
         string[] textureNames = Directory.GetFiles(TextureDirectory);
@@ -61,6 +73,15 @@ public static class Texture
         }
     }
 
+    /// <summary>
+    /// Gets the texture from <paramref name="fileName"/>.
+    /// </summary>
+    /// <remarks>
+    /// If the <paramref name="fileName"/> is empty then returns a transparent texture,<br/>
+    /// or if not found, then use a purple and black check pattern.
+    /// </remarks>
+    /// <param name="fileName">The file name</param>
+    /// <returns>Texture ID</returns>
     public static int GetTexture(string fileName)
     {
         if (string.IsNullOrEmpty(fileName))
