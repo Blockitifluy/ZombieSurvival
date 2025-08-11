@@ -25,13 +25,13 @@ When getting an error check:
 To build the C# use:
 
 ```CMD
-./make-build path-to-destination
+./make-build <path-to-destination>
 ```
 
 ## Loading Scenes
 
 ```cmd
-ZombieSurvial load path-to-scene
+ZombieSurvial load <path-to-scene>
 ```
 
 When recieving an error, do the same steps in the [Loading Demo Scene](#loading-demo-scene).

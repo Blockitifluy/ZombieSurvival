@@ -9,7 +9,7 @@ public static class Texture
     /// <summary>
     /// The base texture directory.
     /// </summary>
-    public const string TextureDirectory = @"resources\textures";
+    public const string TextureDirectory = @"resources/textures";
     /// <summary>
     /// Shown when a texture couldn't found.
     /// </summary>

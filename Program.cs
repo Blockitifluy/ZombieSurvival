@@ -43,7 +43,7 @@ public static class Program
 		rigid.Mass = 0.5f;
 
 		MeshContainer awesomeCube = Node.New<MeshContainer>(rigid, "awesome-cube");
-		awesomeCube.Mesh = Resource.LoadResourceFromFile<Mesh>("resources/meshs/cup.mesh");
+		awesomeCube.Mesh = Mesh.GetMeshPrimitive(Mesh.MeshPrimitive.Cube);
 		awesomeCube.Position += EVector3.Up;
 
 		Collider collision0 = Node.New<Collider>(rigid, "awe-collision");
